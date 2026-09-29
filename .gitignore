@@ -1,0 +1,25 @@
+# Environment & Secrets
+.env
+env/
+venv/
+*.pyc
+__pycache__/
+
+# Django
+*.log
+*.sqlite3
+staticfiles/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
