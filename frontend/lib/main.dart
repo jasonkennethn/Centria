@@ -88,13 +88,6 @@ class CentriaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: baseDarkTheme.copyWith(
         textTheme: GoogleFonts.interTextTheme(baseDarkTheme.textTheme),
-        pageTransitionsTheme: PageTransitionsTheme(
-          builders: {
-            TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
-            TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
-            TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
-          },
-        ),
       ),
       home: _resolveInitialScreen(),
     );
