@@ -1,16 +1,23 @@
-# centria
+# Centria — Client Application
 
-A new Flutter project.
+The cross-platform client for the Centria Enterprise Cloud Platform, targeting Web, Android, and iOS.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Architectural Highlights
 
-A few resources to get you started if this is your first Flutter project:
+- **Framework**: Flutter 3.29+ / Dart 3.7+
+- **Design System**: Apple-grade dark theme (`#090C16`) with glassmorphism, responsive tactile buttons, and Inter typography.
+- **Latency-Free Splash**: Snappy 380ms cold entrance with 3-dot glowing pulse.
+- **Session Intelligence**: Route memory via browser session storage on Web and local memory on mobile platforms, preventing repeated splashscreens on browser refresh or sign-out.
+- **Progressive Authentication**: Locked credential display for prefilled email with verified security indicator.
+- **Offline Resilient**: Local state caching with automatic network state monitoring.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Author
+
+**Jason Kenneth N**  
+- **GitHub**: [@jasonkennethn](https://github.com/jasonkennethn)  
+- **Repository**: [https://github.com/jasonkennethn/Cen](https://github.com/jasonkennethn/Cen)  
+- **Contact**: `jasonkennethn@gmail.com`  

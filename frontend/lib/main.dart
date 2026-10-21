@@ -1,165 +1,102 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'core/theme/app_theme.dart';
-import 'core/constants/app_constants.dart';
-import 'widgets/app_sidebar.dart';
-import 'widgets/omnibar_dialog.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'services/local_storage.dart';
+import 'services/session_manager.dart';
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/home_screen.dart';
 
-import 'modules/public/home_page.dart';
-import 'modules/public/privacy_policy_page.dart';
-import 'modules/public/terms_of_service_page.dart';
-import 'modules/auth/login_page.dart';
-import 'modules/auth/register_page.dart';
-import 'modules/auth/otp_verify_page.dart';
-import 'modules/genesis/genesis_wizard_page.dart';
-import 'modules/dashboard/dashboard_page.dart';
-import 'modules/people/people_page.dart';
-import 'modules/workflows/workflows_page.dart';
-import 'modules/documents/documents_page.dart';
-import 'modules/governance/governance_page.dart';
-import 'modules/operations/operations_page.dart';
-import 'modules/finance/finance_page.dart';
-import 'modules/analytics/analytics_page.dart';
-import 'modules/ai_copilot/copilot_page.dart';
-import 'modules/customization/customization_page.dart';
-
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CentriaApp());
+
+  // Set seamless edge-to-edge transparent system UI
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Color(0xFF090C16),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
+
+  // Read login state and tab session state synchronously/asynchronously before runApp
+  final bool loggedIn = await LocalStorage.isLoggedIn();
+  final bool splashAlreadyShown = SessionManager.splashAlreadyShown;
+  final String? currentPage = SessionManager.currentPage;
+  final String? prefillEmail = SessionManager.prefillEmail;
+
+  runApp(CentriaApp(
+    initialLoggedIn: loggedIn,
+    splashAlreadyShown: splashAlreadyShown,
+    initialPage: currentPage,
+    initialPrefillEmail: prefillEmail,
+  ));
 }
 
-class CentriaApp extends StatefulWidget {
-  const CentriaApp({super.key});
+class CentriaApp extends StatelessWidget {
+  final bool initialLoggedIn;
+  final bool splashAlreadyShown;
+  final String? initialPage;
+  final String? initialPrefillEmail;
 
-  @override
-  State<CentriaApp> createState() => _CentriaAppState();
-}
+  const CentriaApp({
+    super.key,
+    this.initialLoggedIn = false,
+    this.splashAlreadyShown = false,
+    this.initialPage,
+    this.initialPrefillEmail,
+  });
 
-class _CentriaAppState extends State<CentriaApp> {
-  String _currentRoute = '/';
-  dynamic _routeArgs;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Widget _resolveInitialScreen() {
+    // If opening afresh (closed and reopened), show splashscreen once
+    if (!splashAlreadyShown) {
+      return const SplashScreen();
+    }
 
-  void _navigate(String route, {dynamic arguments}) {
-    setState(() {
-      _currentRoute = route;
-      _routeArgs = arguments;
-    });
+    // On browser refresh / page reload in same session: bypass splashscreen completely
+    if (initialLoggedIn) {
+      return const HomeScreen();
+    }
+
+    if (initialPage == 'register' &&
+        initialPrefillEmail != null &&
+        initialPrefillEmail!.isNotEmpty) {
+      return RegisterScreen(prefillEmail: initialPrefillEmail!);
+    }
+
+    return const LoginScreen();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '${AppConstants.appName} — ${AppConstants.appTagline}',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () {
-            OmnibarDialog.show(context);
-          },
-          const SingleActivator(LogicalKeyboardKey.keyK, control: true): () {
-            OmnibarDialog.show(context);
-          },
-        },
-        child: Focus(
-          autofocus: true,
-          child: _buildAppRouter(),
-        ),
+    final baseDarkTheme = ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF090C16),
+      useMaterial3: true,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF00D2FF),
+        secondary: Color(0xFF7C4DFF),
+        surface: Color(0xFF0F1527),
       ),
     );
-  }
 
-  Widget _buildAppRouter() {
-    // Standalone Public & Auth Pages (No Sidebar)
-    if (_currentRoute == '/') {
-      return HomePage(onNavigate: _navigate);
-    }
-    if (_currentRoute == '/privacy-policy') {
-      return PrivacyPolicyPage(onNavigate: _navigate);
-    }
-    if (_currentRoute == '/terms-of-service') {
-      return TermsOfServicePage(onNavigate: _navigate);
-    }
-    if (_currentRoute == '/login') {
-      return LoginPage(onNavigate: _navigate);
-    }
-    if (_currentRoute == '/register') {
-      return RegisterPage(onNavigate: _navigate);
-    }
-    if (_currentRoute == '/otp-verify') {
-      return OtpVerifyPage(
-        email: _routeArgs is String ? _routeArgs : 'admin@celarox.com',
-        onNavigate: _navigate,
-      );
-    }
-    if (_currentRoute == '/genesis') {
-      return GenesisWizardPage(onNavigate: _navigate);
-    }
-
-    // Authenticated Workspace Shell with Sidebar + Content
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 900;
-
-        return Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: AppTheme.darkBg,
-          drawer: !isDesktop
-              ? Drawer(
-                  backgroundColor: AppTheme.darkCard,
-                  child: AppSidebar(
-                    activeRoute: _currentRoute,
-                    onNavigate: (r) {
-                      Navigator.pop(context);
-                      _navigate(r);
-                    },
-                  ),
-                )
-              : null,
-          body: Row(
-            children: [
-              if (isDesktop)
-                AppSidebar(
-                  activeRoute: _currentRoute,
-                  onNavigate: _navigate,
-                ),
-              Expanded(
-                child: _buildMainModuleView(),
-              ),
-            ],
-          ),
-        );
-      },
+    return MaterialApp(
+      title: 'Centria',
+      debugShowCheckedModeBanner: false,
+      theme: baseDarkTheme.copyWith(
+        textTheme: GoogleFonts.interTextTheme(baseDarkTheme.textTheme),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
+      ),
+      home: _resolveInitialScreen(),
     );
-  }
-
-  Widget _buildMainModuleView() {
-    void openDrawer() => _scaffoldKey.currentState?.openDrawer();
-
-    switch (_currentRoute) {
-      case '/dashboard':
-        return DashboardPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/people':
-        return PeoplePage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/workflows':
-        return WorkflowsPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/documents':
-        return DocumentsPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/governance':
-        return GovernancePage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/operations':
-        return OperationsPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/finance':
-        return FinancePage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/analytics':
-        return AnalyticsPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/copilot':
-        return CopilotPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      case '/customization':
-        return CustomizationPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-      default:
-        return DashboardPage(onNavigate: _navigate, onOpenDrawer: openDrawer);
-    }
   }
 }
