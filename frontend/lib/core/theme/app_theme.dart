@@ -41,7 +41,7 @@ class CentriaTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: CentriaColors.surfaceCard,
         elevation: 0,
         margin: EdgeInsets.zero,
