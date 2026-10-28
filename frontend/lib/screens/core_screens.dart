@@ -7,6 +7,7 @@ import '../core/components/cards.dart';
 import '../core/components/badges.dart';
 import '../core/utils/feedback.dart';
 import '../data/demo_data.dart';
+import '../services/api_service.dart';
 
 /// 1. Company Overview Screen (Executive Cockpit)
 class CompanyOverviewScreen extends StatefulWidget {
@@ -17,10 +18,31 @@ class CompanyOverviewScreen extends StatefulWidget {
 }
 
 class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
-  String _selectedCurrency = 'EUR (€)';
+  String _selectedCurrency = 'INR (₹)';
+  Map<String, dynamic>? _liveOverview;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLiveOverview();
+    CentriaDemoData.instance.fetchLiveFromBackend();
+  }
+
+  Future<void> _fetchLiveOverview() async {
+    try {
+      final data = await ApiService.getOverview();
+      if (mounted && data.isNotEmpty) {
+        setState(() => _liveOverview = data);
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
+    final metrics = _liveOverview?['metrics'] as Map<String, dynamic>?;
+    final totalCashDisplay = metrics?['total_cash_display'] ??
+        (_selectedCurrency.startsWith('INR') ? '₹5,84,21,000' : '\$695,450');
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -33,16 +55,18 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text('Acme Global Ltd', style: CentriaTypography.headlineLg),
-                        const SizedBox(width: 8),
-                        const StatusBadge.verified(label: 'UK #0912481'),
+                        Text('Centria Technologies India Pvt Ltd', style: CentriaTypography.headlineLg),
+                        const StatusBadge.verified(label: 'CIN: U72900KA2024PTC189201'),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Executive Cockpit · Sovereign Balance Sheet & Real-Time Statutory Health',
+                      'Executive Cockpit · ROC Bangalore · Sovereign Balance Sheet & GST Health',
                       style: CentriaTypography.bodySm,
                     ),
                   ],
@@ -56,7 +80,7 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
                   border: Border.all(color: CentriaColors.structuralStroke),
                 ),
                 child: Row(
-                  children: ['EUR (€)', 'GBP (£)'].map((c) {
+                  children: ['INR (₹)', 'USD (\$)'].map((c) {
                     final isSel = _selectedCurrency == c;
                     return InkWell(
                       onTap: () => setState(() => _selectedCurrency = c),
@@ -83,21 +107,21 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
 
           // High-priority AI Proposal / Alert
           AIProposalCard(
-            title: 'HMRC CT600 Annual Tax Filing Due in 8 Days',
+            title: 'MCA Form AOC-4 & MGT-7 Annual Filing Due in 8 Days',
             description:
-                'Statutory computation prepared by PwC Tax. R&D credit of €94,200 applied against Corporation Tax. Requires executive biometric ratification before filing.',
-            confidence: '99% conf',
+                'Statutory computation prepared by BSR & Co. Input Tax Credit of ₹18,40,250 verified against GSTR-2B. Requires Director biometric ratification before MCA V3 portal upload.',
+            confidence: '99.4% conf',
             onAccept: () {
               CentriaFeedback.showBiometricConfirmationDialog(
                 context,
-                title: 'Authorize CT600 Statutory Filing',
-                actionLabel: 'HMRC CT600 Return Signed with Biometrics',
+                title: 'Authorize MCA Annual Statutory Filing',
+                actionLabel: 'MCA Forms AOC-4 & MGT-7 Signed with Director Biometrics',
                 consequenceText:
-                    'This action locks the FY25 statutory tax pack and publishes the Merkle root to the sovereign ledger.',
+                    'This action locks the FY25 statutory audit pack and publishes the Merkle root to the Sovereign Ledger.',
                 onConfirm: () {},
               );
             },
-            onReject: () => CentriaFeedback.showAction(context, title: 'Proposal flagged for tax advisor clarification'),
+            onReject: () => CentriaFeedback.showAction(context, title: 'Proposal flagged for statutory auditor clarification'),
           ),
           const SizedBox(height: 20),
 
@@ -115,32 +139,32 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
                 children: [
                   MetricCard(
                     label: 'Consolidated Cash',
-                    value: _selectedCurrency.startsWith('EUR') ? '€5,842,100' : '£4,980,450',
-                    subtitle: '18.4 Months Runway',
+                    value: totalCashDisplay,
+                    subtitle: metrics?['runway_months'] ?? '18.4 Months Runway',
                     icon: Icons.account_balance_rounded,
-                    badge: const StatusBadge.verified(label: 'Verified Sync'),
+                    badge: const StatusBadge.verified(label: 'HDFC & ICICI'),
                     onTap: () => context.go('/finance'),
                   ),
                   MetricCard(
                     label: 'Statutory Health',
-                    value: '99.4%',
-                    subtitle: '14/15 Filings Complete',
+                    value: metrics?['statutory_health_percent'] ?? '99.4%',
+                    subtitle: metrics?['statutory_health_status'] ?? '14/15 Filings Complete',
                     icon: Icons.gpp_good_rounded,
-                    badge: const StatusBadge.verified(label: 'Optimal'),
+                    badge: const StatusBadge.verified(label: 'MCA & GSTN'),
                     onTap: () => context.go('/compliance-radar'),
                   ),
                   MetricCard(
                     label: 'Pending Approvals',
-                    value: '3 Actions',
-                    subtitle: 'Biometric Sign-Off Req',
+                    value: '${metrics?['pending_approvals_count'] ?? 3} Actions',
+                    subtitle: 'Director Passkey Req',
                     icon: Icons.approval_rounded,
                     badge: const StatusBadge.pending(label: 'Action Req'),
                     onTap: () => context.go('/approvals'),
                   ),
                   MetricCard(
                     label: 'Active Automations',
-                    value: '14 Pipelines',
-                    subtitle: '99.98% SLA Uptime',
+                    value: '${metrics?['active_integrations_count'] ?? 4} Connectors',
+                    subtitle: 'Razorpay, Zoho, Tally, AWS',
                     icon: Icons.hub_rounded,
                     badge: const StatusBadge.info(label: 'Live Stream'),
                     onTap: () => context.go('/creation-studio'),
@@ -186,7 +210,7 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
               children: [
                 _buildAuditLogTile(
                   'Merkle Block #1,048,592 Locked',
-                  'Vesting allocation & share register updated',
+                  'Vesting allocation & MCA annual return updated',
                   '12m ago',
                   Icons.lock_clock_outlined,
                   CentriaColors.primary900,
@@ -194,8 +218,8 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
                 ),
                 const Divider(),
                 _buildAuditLogTile(
-                  'Forward Collar #FWD-882 Staged',
-                  '£1,200,000 GBP/EUR hedged at strike 1.1740',
+                  'HDFC Forward Collar #INR-FWD-401 Staged',
+                  '₹8,50,00,000 USD/INR hedged at strike 84.15',
                   '1h ago',
                   Icons.currency_exchange_rounded,
                   CentriaColors.pendingFg,
@@ -203,8 +227,8 @@ class _CompanyOverviewScreenState extends State<CompanyOverviewScreen> {
                 ),
                 const Divider(),
                 _buildAuditLogTile(
-                  'Delaware Subsidiary Annual Franchise Tax Filed',
-                  'Acme US Inc. confirmation #DE-9821419',
+                  'Telangana ROC Subsidiary Annual Return Filed',
+                  'Centria Cloud Infrastructure confirmation #TG-192011',
                   '3h ago',
                   Icons.verified_rounded,
                   CentriaColors.verifiedFg,
@@ -293,7 +317,7 @@ class _MyDayScreenState extends State<MyDayScreen> {
               AIProposalCard(
                 title: 'Cognitive Triage Recommendation',
                 description:
-                    '3 pending statutory signatures detected before 17:00 London close. Executing the CT600 and Forward Collar now frees €1.2M in capital reserves.',
+                    '3 pending statutory signatures detected before 17:30 IST. Executing the MCA AOC-4 filing and HDFC Forward Collar now secures ₹8.5 Cr in working capital.',
                 confidence: '96% conf',
                 onAccept: () => CentriaFeedback.showAction(context, title: 'Auto-Triage batch staging initialized'),
                 onReject: () => CentriaFeedback.showAction(context, title: 'Triage recommendation dismissed'),
@@ -704,31 +728,31 @@ class InboxNotificationsScreen extends StatefulWidget {
 class _InboxNotificationsScreenState extends State<InboxNotificationsScreen> {
   final List<Map<String, String>> _notifications = [
     {
-      'title': 'CRITICAL: mTLS Ingestion Certificate Expiring in 72h',
+      'title': 'CRITICAL: Razorpay Ingestion Webhook Key Rotation in 72h',
       'category': 'Security',
       'time': '10m ago',
       'body': 'Production banking webhook endpoint certificate rotation is required.',
       'unread': 'true',
     },
     {
-      'title': 'HMRC Corporation Tax Return Staged by PwC',
+      'title': 'MCA Form AOC-4 Statutory Return Staged by BSR & Co.',
       'category': 'Statutory',
       'time': '45m ago',
-      'body': 'CT600 draft ready for director review in Audit & Statutory Tax Console.',
+      'body': 'Form draft ready for director review in Statutory & Compliance Radar.',
       'unread': 'true',
     },
     {
-      'title': 'EUR/GBP Hedging Trigger: Volatility Exceeded 1.8%',
+      'title': 'USD/INR Hedging Trigger: Spot Volatility Exceeded 1.8%',
       'category': 'Treasury',
       'time': '2h ago',
-      'body': 'Cognitive Treasury copilot generated Forward Collar #FWD-882.',
+      'body': 'Cognitive Treasury copilot generated Forward Collar #INR-FWD-401.',
       'unread': 'false',
     },
     {
-      'title': 'KVK Amsterdam Annual Subsidiary Pack Staged',
+      'title': 'Mumbai LLP Subsidiary MCA Annual Pack Staged',
       'category': 'Legal',
       'time': 'Yesterday',
-      'body': 'Acme EU Technologies B.V. Dutch registry documentation updated.',
+      'body': 'Centria Digital Services (Mumbai) LLP Form 11 documentation updated.',
       'unread': 'false',
     },
   ];

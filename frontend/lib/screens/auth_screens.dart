@@ -97,7 +97,7 @@ class CentriaSplashScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Acme Global Ltd (UK #0912481) · Sovereign Enclave v3.2',
+                    'Centria Technologies India Pvt Ltd (CIN: U72900KA2024PTC189201) · Sovereign Enclave v3.2',
                     style: CentriaTypography.labelSm.copyWith(
                       color: CentriaColors.textMuted,
                     ),
@@ -121,7 +121,7 @@ class ExecutiveSignInScreen extends StatefulWidget {
 }
 
 class _ExecutiveSignInScreenState extends State<ExecutiveSignInScreen> {
-  final _emailController = TextEditingController(text: 'sarah.jenkins@acmeglobal.co.uk');
+  final _emailController = TextEditingController(text: 'sarah.jenkins@centria.in');
   final _pinController = TextEditingController(text: '••••••••');
   bool _obscurePin = true;
 
@@ -205,7 +205,7 @@ class _ExecutiveSignInScreenState extends State<ExecutiveSignInScreen> {
                         CentriaFeedback.showAction(
                           context,
                           title: 'Executive Biometric Verified',
-                          message: 'Access granted to Acme Global Ltd Sovereign Ledger.',
+                          message: 'Access granted to Centria Technologies India Pvt Ltd Sovereign Ledger.',
                         );
                         context.go('/overview');
                       },
@@ -354,9 +354,9 @@ class EnterpriseOnboardingScreen extends StatefulWidget {
 class _EnterpriseOnboardingScreenState extends State<EnterpriseOnboardingScreen> {
   int _currentStep = 0;
   String _selectedRole = 'CEO / Director';
-  final _companyController = TextEditingController(text: 'Acme Global Ltd');
-  final _regNumberController = TextEditingController(text: '0912481');
-  final _jurisdictionController = TextEditingController(text: 'United Kingdom (Companies House)');
+  final _companyController = TextEditingController(text: 'Centria Technologies India Pvt Ltd');
+  final _regNumberController = TextEditingController(text: 'U72900KA2024PTC189201');
+  final _jurisdictionController = TextEditingController(text: 'India (ROC Bangalore / MCA)');
 
   @override
   Widget build(BuildContext context) {
@@ -414,7 +414,7 @@ class _EnterpriseOnboardingScreenState extends State<EnterpriseOnboardingScreen>
                             CentriaFeedback.showAction(
                               context,
                               title: 'Sovereign Ledger Provisioned',
-                              message: 'Workspace Acme Global Ltd is ready.',
+                              message: 'Workspace Centria Technologies India Pvt Ltd is ready.',
                             );
                             context.go('/overview');
                           }

@@ -51,15 +51,14 @@ class FinancialControlScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text('€5,842,100', style: CentriaTypography.display.copyWith(fontFamily: 'JetBrains Mono', color: CentriaColors.primary900)),
+                Text('₹5,84,21,000', style: CentriaTypography.display.copyWith(fontFamily: 'JetBrains Mono', color: CentriaColors.primary900)),
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: CentriaRadii.componentRadius,
                   child: Row(
                     children: [
-                      Expanded(flex: 74, child: Container(height: 8, color: CentriaColors.primary900)),
-                      Expanded(flex: 21, child: Container(height: 8, color: CentriaColors.primary500)),
-                      Expanded(flex: 5, child: Container(height: 8, color: CentriaColors.cognitiveDeep)),
+                      Expanded(flex: 83, child: Container(height: 8, color: CentriaColors.primary900)),
+                      Expanded(flex: 17, child: Container(height: 8, color: CentriaColors.primary500)),
                     ],
                   ),
                 ),
@@ -68,9 +67,8 @@ class FinancialControlScreen extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 8,
                   children: [
-                    _currencyPill('EUR (€)', '€4,323,154', '74%', CentriaColors.primary900),
-                    _currencyPill('GBP (£)', '£1,226,842', '21%', CentriaColors.primary500),
-                    _currencyPill('USD (\$)', '\$292,104', '5%', CentriaColors.cognitiveDeep),
+                    _currencyPill('INR (₹)', '₹4,84,21,000', '83%', CentriaColors.primary900),
+                    _currencyPill('USD (\$)', '\$120,000', '17%', CentriaColors.primary500),
                   ],
                 ),
               ],
@@ -81,9 +79,9 @@ class FinancialControlScreen extends StatelessWidget {
           Text('Sovereign Bank Enclaves', style: CentriaTypography.headlineSm),
           const SizedBox(height: 12),
 
-          _bankAccountTile('Barclays Corporate UK', 'Sort 20-00-00 · Acc #91823019', '£1,226,842', 'London Hub', Icons.account_balance),
-          _bankAccountTile('ABN AMRO Commercial B.V.', 'NL91 ABNA 0418 2910 44', '€4,323,154', 'Amsterdam Hub', Icons.account_balance),
-          _bankAccountTile('Silicon Valley Bank / First Citizens', 'Routing 12114039 · Acc #9921', '\$292,104', 'Delaware Corp', Icons.account_balance),
+          _bankAccountTile('HDFC Bank Corporate Current', 'IFSC HDFC0000240 · Acc •••• 8920', '₹3,42,15,000', 'Bengaluru Hub', Icons.account_balance),
+          _bankAccountTile('ICICI Bank Treasury Enclave', 'IFSC ICIC0000002 · Acc •••• 4102', '₹1,42,06,000', 'Mumbai Hub', Icons.account_balance),
+          _bankAccountTile('State Bank of India (SBI) Operational', 'IFSC SBIN0000800 · Acc •••• 1198', '₹1,00,00,000', 'Bengaluru Hub', Icons.account_balance),
         ],
       ),
     );
@@ -163,7 +161,7 @@ class ExpenseCardControlsScreen extends StatelessWidget {
               Expanded(
                 child: MetricCard(
                   label: 'Monthly Spend',
-                  value: '€142,800',
+                  value: '₹14,28,000',
                   subtitle: '78% of Monthly Cap',
                   icon: Icons.credit_card_rounded,
                   badge: const StatusBadge.verified(label: 'In Policy'),
@@ -176,7 +174,7 @@ class ExpenseCardControlsScreen extends StatelessWidget {
                   value: '18 Cards',
                   subtitle: '4 Departments',
                   icon: Icons.badge_outlined,
-                  badge: const StatusBadge.info(label: 'Enclave Locked'),
+                  badge: const StatusBadge.info(label: 'RuPay & Visa'),
                 ),
               ),
             ],
@@ -186,9 +184,9 @@ class ExpenseCardControlsScreen extends StatelessWidget {
           Text('Corporate Card Roster & Caps', style: CentriaTypography.headlineSm),
           const SizedBox(height: 12),
 
-          _cardTile('Executive Travel & Legal', '•••• 4892 · Sarah Jenkins', '€25,000 / mo', '€4,210 Spent', Icons.credit_card),
-          _cardTile('Engineering Cloud AWS & AI', '•••• 1024 · Michael Chen', '€60,000 / mo', '€42,890 Spent', Icons.credit_card),
-          _cardTile('Marketing & Commercial Ops', '•••• 9140 · David Vance', '€15,000 / mo', '€9,140 Spent', Icons.credit_card),
+          _cardTile('Executive Travel & Legal', '•••• 4892 · Sarah Jenkins (RuPay)', '₹25,00,000 / mo', '₹4,21,000 Spent', Icons.credit_card),
+          _cardTile('Engineering Cloud AWS & AI', '•••• 1024 · Michael Chen (Visa)', '₹60,00,000 / mo', '₹42,89,000 Spent', Icons.credit_card),
+          _cardTile('Marketing & Commercial Ops', '•••• 9140 · Rahul Sharma (RuPay)', '₹15,00,000 / mo', '₹9,14,000 Spent', Icons.credit_card),
         ],
       ),
     );
@@ -258,16 +256,16 @@ class TreasuryFxScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           AIProposalCard(
-            title: 'Cognitive Treasury Signal: Forward Collar #FWD-882',
+            title: 'Cognitive Treasury Signal: Forward Collar #INR-FWD-401',
             description:
-                'GBP/EUR volatility exceeded 1.8% threshold. Proposed hedge collar locks £1,200,000 at strike 1.1740 to safeguard UK subsidiary operational runway for Q1 2027.',
+                'USD/INR volatility exceeded 1.8% threshold. Proposed hedge collar locks ₹8,50,00,000 (\$1M) at strike 84.15 to safeguard Q1 2027 operational runway.',
             confidence: '98% conf',
             onAccept: () {
               CentriaFeedback.showBiometricConfirmationDialog(
                 context,
-                title: 'Execute Forward Collar #FWD-882',
-                actionLabel: 'Forward Collar #FWD-882 Executed with Biometrics',
-                consequenceText: 'Notional amount £1,200,000 locked against Barclays Corporate Treasury enclave.',
+                title: 'Execute Forward Collar #INR-FWD-401',
+                actionLabel: 'Forward Collar #INR-FWD-401 Executed with Biometrics',
+                consequenceText: 'Notional amount ₹8,50,00,000 locked against HDFC Corporate Treasury enclave.',
                 onConfirm: () {},
               );
             },
@@ -280,7 +278,7 @@ class TreasuryFxScreen extends StatelessWidget {
               Expanded(
                 child: MetricCard(
                   label: 'FX Value-at-Risk (24h)',
-                  value: '€14,200',
+                  value: '₹1,42,000',
                   subtitle: '99% Confidence Interval',
                   icon: Icons.analytics_outlined,
                   badge: const StatusBadge.verified(label: 'Safe Exposure'),
@@ -289,11 +287,11 @@ class TreasuryFxScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: MetricCard(
-                  label: 'EUR Yield Reserve',
-                  value: '3.85% APY',
-                  subtitle: '€3,388,650 Allocated',
+                  label: 'INR Liquid Reserve',
+                  value: '7.15% APY',
+                  subtitle: '₹3,38,86,500 Allocated',
                   icon: Icons.trending_up_rounded,
-                  badge: const StatusBadge.info(label: 'Automated Yield'),
+                  badge: const StatusBadge.info(label: 'T-Bills & Overnight'),
                 ),
               ),
             ],
@@ -431,7 +429,7 @@ class CreationStudioScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text('Active Sovereign Schemas with Cryptographic Proof Integrity:', style: CentriaTypography.bodySm),
                 const SizedBox(height: 12),
-                _schemaItem('StatutoryTaxPack', 'HMRC & Dutch KVK statutory filing records with Merkle root bindings'),
+                _schemaItem('StatutoryTaxPack', 'MCA V3 & GSTN statutory filing records with Merkle root bindings'),
                 _schemaItem('TreasuryCollarContract', 'ISDA bilateral forward hedging contracts & currency risk collars'),
                 _schemaItem('RemCoLTIPTranche', 'Executive stock grants with multi-year milestone vesting gates'),
               ],

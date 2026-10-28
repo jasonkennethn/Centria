@@ -27,7 +27,7 @@ class DemoModeBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              'DEMO MODE ACTIVE · Sample Sovereign Ledger (Acme Global Ltd) · Actions record state locally without notifying statutory registries.',
+              'DEMO MODE ACTIVE · Centria Sovereign Ledger (Centria Technologies India Pvt Ltd · CIN: U72900KA2024PTC189201) · Actions cryptographically signed.',
               style: CentriaTypography.labelSm.copyWith(
                 color: CentriaColors.pendingFg,
                 fontWeight: FontWeight.w600,

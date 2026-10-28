@@ -249,19 +249,19 @@ class AuditStatutoryTaxScreen extends StatelessWidget {
                   children: [
                     Text('Audit & Statutory Tax Console', style: CentriaTypography.headlineLg),
                     const SizedBox(height: 4),
-                    Text('HMRC CT600, Dutch VPB Corporate Tax & US Delaware Franchise Provisions', style: CentriaTypography.bodySm),
+                    Text('MCA Forms AOC-4/MGT-7, GST GSTR-3B & Income Tax TDS Provisions', style: CentriaTypography.bodySm),
                   ],
                 ),
               ),
               CentriaButton(
-                label: 'Authorize CT600 Filing',
+                label: 'Authorize MCA Filing',
                 icon: Icons.fingerprint_rounded,
                 onPressed: () {
                   CentriaFeedback.showBiometricConfirmationDialog(
                     context,
-                    title: 'Authorize CT600 Filing',
-                    actionLabel: 'CT600 Return Filed with HMRC Gateway',
-                    consequenceText: 'Publishes audited tax calculations and R&D expenditure credits to Companies House & HMRC.',
+                    title: 'Authorize MCA Forms AOC-4 & MGT-7 Filing',
+                    actionLabel: 'Statutory Pack Transmitted to MCA V3 Portal',
+                    consequenceText: 'Publishes audited financial statements and director report to Registrar of Companies (ROC Bangalore).',
                     onConfirm: () {},
                   );
                 },
@@ -271,18 +271,19 @@ class AuditStatutoryTaxScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           AIProposalCard(
-            title: 'PwC Tax Re-allocation: €94,200 R&D Credit',
+            title: 'BSR & Co. Tax Advisory: ₹18,40,250 Input Tax Credit',
             description:
-                'Statutory computation identified qualifying AI Enclave engineering expenditure under UK SME R&D scheme. Recommended offset reduces Corporation Tax liability to €318,650.',
-            confidence: '99% conf',
-            onAccept: () => CentriaFeedback.showAction(context, title: 'R&D Tax credit offset staged'),
+                'Statutory computation identified qualifying AI Enclave engineering capital expenditure. Offset verified against GSTR-2B portal feed reduces direct tax liability to ₹35,00,000.',
+            confidence: '99.4% conf',
+            onAccept: () => CentriaFeedback.showAction(context, title: 'GST ITC offset staged for GSTR-3B return'),
             onReject: () => CentriaFeedback.showAction(context, title: 'Credit offset review requested'),
           ),
           const SizedBox(height: 20),
 
-          _taxObligationTile('UK HMRC Corporation Tax (CT600)', 'Due Nov 05, 2026 · €318,650 Estimated Liability', 'READY TO FILE'),
-          _taxObligationTile('Netherlands Dutch Corporate Tax (VPB)', 'Due Dec 31, 2026 · €94,100 Provisioned', 'STAGED'),
-          _taxObligationTile('Delaware Annual Franchise Tax', 'Filed Oct 22, 2026 · Confirmation #DE-9821419', 'FILED'),
+          _taxObligationTile('MCA Annual Filing (Forms AOC-4 & MGT-7)', 'Due Nov 05, 2026 · Statutory Audit Pack Signed by BSR & Co.', 'READY TO FILE'),
+          _taxObligationTile('GST Monthly Return (GSTR-3B & GSTR-1)', 'Due Nov 20, 2026 · ₹18,40,250 Tax Liability offset with ITC', 'VERIFIED'),
+          _taxObligationTile('Income Tax Q3 Advance Tax (ITD 26AS/TDS)', 'Due Dec 15, 2026 · ₹35,00,000 Provisioned', 'STAGED'),
+          _taxObligationTile('EPFO & ESIC Monthly Remittance', 'Filed Oct 15, 2026 · ₹6,84,120 for 142 Employees · Ref #ECR-89214', 'FILED'),
         ],
       ),
     );

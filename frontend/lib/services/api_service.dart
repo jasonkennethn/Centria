@@ -6,32 +6,52 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const Duration _timeout = Duration(seconds: 15);
 
-  static String get baseUrl {
+  /// Root host for API (Render in production/release, localhost in debug web/desktop, 10.0.2.2 in Android emulator)
+  static String get apiHost {
     const envUrl = String.fromEnvironment('API_URL');
     if (envUrl.isNotEmpty) {
       final clean = envUrl.endsWith('/') ? envUrl.substring(0, envUrl.length - 1) : envUrl;
-      return clean.endsWith('/api/auth') ? clean : '$clean/api/auth';
+      return clean.replaceAll('/api/auth', '').replaceAll('/api/v1', '');
     }
 
-    // In release mode or production, use Render backend
     if (!kDebugMode) {
-      return 'https://centria-enterprise.onrender.com/api/auth';
+      return 'https://centria-enterprise.onrender.com';
     }
 
-    // In debug/dev mode:
     if (kIsWeb) {
-      return 'http://localhost:8000/api/auth';
+      return 'http://localhost:8000';
     }
-    // Android emulator alias for host machine localhost
-    return 'http://10.0.2.2:8000/api/auth';
+    return 'http://10.0.2.2:8000';
   }
+
+  static String get authUrl => '$apiHost/api/auth';
+  static String get apiV1Url => '$apiHost/api/v1';
+
+  // Backward compatibility alias for legacy callers
+  static String get baseUrl => authUrl;
+
+  // Active Company Tenant Context (can be passed via X-Company-ID header)
+  static String? activeCompanyId;
+
+  static Map<String, String> _buildHeaders() {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    if (activeCompanyId != null && activeCompanyId!.isNotEmpty) {
+      headers['X-Company-ID'] = activeCompanyId!;
+    }
+    return headers;
+  }
+
+  // --- AUTH ENDPOINTS ---
 
   static Future<Map<String, dynamic>> checkEmail(String email) async {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/check-email/'),
-            headers: {'Content-Type': 'application/json'},
+            Uri.parse('$authUrl/check-email/'),
+            headers: _buildHeaders(),
             body: jsonEncode({'email': email}),
           )
           .timeout(_timeout);
@@ -59,8 +79,8 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/login/'),
-            headers: {'Content-Type': 'application/json'},
+            Uri.parse('$authUrl/login/'),
+            headers: _buildHeaders(),
             body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(_timeout);
@@ -90,8 +110,8 @@ class ApiService {
     try {
       final response = await http
           .post(
-            Uri.parse('$baseUrl/register/'),
-            headers: {'Content-Type': 'application/json'},
+            Uri.parse('$authUrl/register/'),
+            headers: _buildHeaders(),
             body: jsonEncode({
               'email': email,
               'password': password,
@@ -120,6 +140,170 @@ class ApiService {
         throw Exception('Unable to reach server. Please check your connection.');
       }
       rethrow;
+    }
+  }
+
+  // --- ENTERPRISE API V1 ENDPOINTS ---
+
+  /// GET /api/v1/overview/
+  static Future<Map<String, dynamic>> getOverview() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$apiV1Url/overview/'), headers: _buildHeaders())
+          .timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+      throw Exception('Overview fetch failed with code ${res.statusCode}');
+    } catch (e) {
+      return <String, dynamic>{};
+    }
+  }
+
+  /// GET /api/v1/tasks/
+  static Future<List<Map<String, dynamic>>> getTasks({String? status}) async {
+    try {
+      final uri = status != null
+          ? Uri.parse('$apiV1Url/tasks/?status=$status')
+          : Uri.parse('$apiV1Url/tasks/');
+      final res = await http.get(uri, headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        return list.map((item) => item as Map<String, dynamic>).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// POST /api/v1/tasks/
+  static Future<Map<String, dynamic>> createTask(Map<String, dynamic> data) async {
+    final res = await http
+        .post(
+          Uri.parse('$apiV1Url/tasks/'),
+          headers: _buildHeaders(),
+          body: jsonEncode(data),
+        )
+        .timeout(_timeout);
+    if (res.statusCode == 201) {
+      return jsonDecode(res.body);
+    }
+    throw Exception('Failed to create task: ${res.body}');
+  }
+
+  /// PATCH /api/v1/tasks/{id}/
+  static Future<Map<String, dynamic>> updateTask(String taskId, Map<String, dynamic> data) async {
+    final res = await http
+        .patch(
+          Uri.parse('$apiV1Url/tasks/$taskId/'),
+          headers: _buildHeaders(),
+          body: jsonEncode(data),
+        )
+        .timeout(_timeout);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+    throw Exception('Failed to update task: ${res.body}');
+  }
+
+  /// DELETE /api/v1/tasks/{id}/
+  static Future<bool> deleteTask(String taskId) async {
+    final res = await http
+        .delete(Uri.parse('$apiV1Url/tasks/$taskId/'), headers: _buildHeaders())
+        .timeout(_timeout);
+    return res.statusCode == 204;
+  }
+
+  /// GET /api/v1/approvals/
+  static Future<List<Map<String, dynamic>>> getApprovals({String? status}) async {
+    try {
+      final uri = status != null
+          ? Uri.parse('$apiV1Url/approvals/?status=$status')
+          : Uri.parse('$apiV1Url/approvals/');
+      final res = await http.get(uri, headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        return list.map((item) => item as Map<String, dynamic>).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// POST /api/v1/approvals/{id}/execute/
+  static Future<Map<String, dynamic>> executeApproval(
+    String approvalId, {
+    String action = 'APPROVE',
+    String? decisionNote,
+  }) async {
+    final res = await http
+        .post(
+          Uri.parse('$apiV1Url/approvals/$approvalId/execute/'),
+          headers: _buildHeaders(),
+          body: jsonEncode({
+            'action': action,
+            'decision_note': decisionNote ?? 'Biometric ratification completed via Director Secure Enclave.',
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    }
+    throw Exception('Approval execution failed: ${res.body}');
+  }
+
+  /// GET /api/v1/finance/
+  static Future<Map<String, dynamic>> getFinance() async {
+    try {
+      final res = await http.get(Uri.parse('$apiV1Url/finance/'), headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// GET /api/v1/statutory/
+  static Future<Map<String, dynamic>> getStatutory() async {
+    try {
+      final res = await http.get(Uri.parse('$apiV1Url/statutory/'), headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// GET /api/v1/integrations/
+  static Future<Map<String, dynamic>> getIntegrations() async {
+    try {
+      final res = await http.get(Uri.parse('$apiV1Url/integrations/'), headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+      return {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /// GET /api/v1/audit/
+  static Future<List<Map<String, dynamic>>> getAudit() async {
+    try {
+      final res = await http.get(Uri.parse('$apiV1Url/audit/'), headers: _buildHeaders()).timeout(_timeout);
+      if (res.statusCode == 200) {
+        final list = jsonDecode(res.body) as List;
+        return list.map((item) => item as Map<String, dynamic>).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }

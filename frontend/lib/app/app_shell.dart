@@ -5,6 +5,7 @@ import '../core/theme/typography.dart';
 import '../core/layout/breakpoints.dart';
 import '../core/components/demo_mode_banner.dart';
 import '../core/utils/feedback.dart';
+import '../data/demo_data.dart';
 
 class NavDestinationItem {
   final String route;
@@ -117,7 +118,7 @@ class AppShell extends StatelessWidget {
                               Row(
                                 children: [
                                   Text(
-                                    'Acme Global Ltd',
+                                    CentriaDemoData.instance.companyName,
                                     style: CentriaTypography.labelMd.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: CentriaColors.textPrimary,
@@ -129,7 +130,7 @@ class AppShell extends StatelessWidget {
                                 ],
                               ),
                               Text(
-                                '(UK) • Sovereign Ledger v3.2',
+                                '🇮🇳 ${CentriaDemoData.instance.companyJurisdiction}',
                                 style: CentriaTypography.labelSm.copyWith(
                                   color: CentriaColors.textMuted,
                                   fontSize: 10,

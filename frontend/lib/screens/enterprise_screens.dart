@@ -25,7 +25,7 @@ class LegalEntityScreen extends StatelessWidget {
                   children: [
                     Text('Legal Entity & Subsidiary Governance', style: CentriaTypography.headlineLg),
                     const SizedBox(height: 4),
-                    Text('Corporate Registry Compliance, KVK Filings & Intercompany Agreements', style: CentriaTypography.bodySm),
+                    Text('Corporate Registry Compliance, MCA Filings & Intercompany Agreements', style: CentriaTypography.bodySm),
                   ],
                 ),
               ),
@@ -35,9 +35,9 @@ class LegalEntityScreen extends StatelessWidget {
                 onPressed: () {
                   CentriaFeedback.showBiometricConfirmationDialog(
                     context,
-                    title: 'Authorize KVK Annual Director Filing',
-                    actionLabel: 'KVK Filing Transmitted to Amsterdam Chamber of Commerce',
-                    consequenceText: 'Signs statutory corporate resolution for Acme EU Technologies B.V.',
+                    title: 'Authorize MCA Form DIR-12 Director Filing',
+                    actionLabel: 'Form DIR-12 Transmitted to MCA V3 Portal & ROC Bangalore',
+                    consequenceText: 'Signs statutory corporate resolution for Centria Technologies India Pvt Ltd (CIN: U72900KA2024PTC189201).',
                     onConfirm: () {},
                   );
                 },
@@ -46,9 +46,9 @@ class LegalEntityScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          _entityTile('🇬🇧 Acme Global Ltd', 'UK Parent Holding · Companies House #0912481', 'ACTIVE SOVEREIGN', CentriaColors.verifiedFg),
-          _entityTile('🇳🇱 Acme EU Technologies B.V.', 'EU Operating Hub · Amsterdam KVK #84910294', 'KVK UBO DUE', CentriaColors.pendingFg),
-          _entityTile('🇺🇸 Acme US Inc.', 'Delaware C-Corp · File #DE-9821419', 'GOOD STANDING', CentriaColors.verifiedFg),
+          _entityTile('🇮🇳 Centria Technologies India Pvt Ltd', 'Bangalore HQ · ROC Bangalore #U72900KA2024PTC189201', 'ACTIVE SOVEREIGN', CentriaColors.verifiedFg),
+          _entityTile('🇮🇳 Centria Digital Services (Mumbai) LLP', 'Mumbai Regional Operations · LLPIN #ABB-4921', 'GOOD STANDING', CentriaColors.verifiedFg),
+          _entityTile('🇮🇳 Centria Cloud Infrastructure (Hyderabad) Pvt Ltd', 'Telangana Datacenter · ROC Hyderabad #U72200TG2025PTC192011', 'MCA COMPLIANT', CentriaColors.verifiedFg),
         ],
       ),
     );
@@ -125,7 +125,7 @@ class BoardMeetingScreen extends StatelessWidget {
               children: [
                 Text('Q4 Staged Agenda Items', style: CentriaTypography.headlineSm),
                 const SizedBox(height: 12),
-                _agendaItem('1. FY26 Sovereign Budget & Treasury Allocation (€15M Inflow)', 'UNANIMOUS APPROVAL'),
+                _agendaItem('1. FY26 Sovereign Budget & Treasury Allocation (₹125 Cr Inflow)', 'UNANIMOUS APPROVAL'),
                 _agendaItem('2. Series B Term Sheet Ratification & Expansion of Option Pool', 'READY TO VOTE'),
                 _agendaItem('3. Appointment of Independent Statutory Auditor (KPMG UK)', 'EXECUTED'),
               ],
@@ -387,7 +387,7 @@ class ExecutiveCompScreen extends StatelessWidget {
               children: [
                 Text('FY25 Executive LTIP Tranche 3 Vesting & Performance Gates', style: CentriaTypography.headlineSm),
                 const SizedBox(height: 8),
-                Text('Performance Gate 1: Arr > €10M (Achieved: €12.4M) · Gate 2: Net Retention > 115% (Achieved: 122%)',
+                Text('Performance Gate 1: ARR > ₹100 Cr (Achieved: ₹124 Cr) · Gate 2: Net Retention > 115% (Achieved: 122%)',
                     style: CentriaTypography.bodySm),
               ],
             ),
@@ -473,7 +473,7 @@ class RiskInsuranceScreen extends StatelessWidget {
               CentriaButton(
                 label: 'Authorize Policy Renewal',
                 icon: Icons.fingerprint_rounded,
-                onPressed: () => CentriaFeedback.showAction(context, title: 'Lloyds of London D&O Policy Renewal Authorized'),
+                onPressed: () => CentriaFeedback.showAction(context, title: 'ICICI Lombard D&O Policy Renewal Authorized'),
               ),
             ],
           ),
@@ -481,7 +481,7 @@ class RiskInsuranceScreen extends StatelessWidget {
 
           CentriaCard(
             child: Text(
-              'Active Policies: €20M Directors & Officers Liability (Chubb UK), €10M Enterprise Cyber Re-insurance (Lloyds Syndicate 2001).',
+              'Active Policies: ₹150 Cr Directors & Officers Liability (ICICI Lombard), ₹50 Cr Enterprise Cyber Re-insurance (Tata AIG).',
               style: CentriaTypography.bodySm,
             ),
           ),

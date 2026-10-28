@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts',
+    'enterprise',
 ]
 
 MIDDLEWARE = [
@@ -74,8 +75,11 @@ if 'test' in sys.argv:
         }
     }
 else:
+    db_config = dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    if db_config.get('HOST', '').endswith('.neon.tech'):
+        db_config.setdefault('OPTIONS', {})['hostaddr'] = os.getenv('DB_HOSTADDR', '52.76.246.190')
     DATABASES = {
-        'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+        'default': db_config
     }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -86,8 +90,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'accounts.User'
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'en-in'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 

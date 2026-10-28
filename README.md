@@ -1,58 +1,128 @@
-# Centria — Enterprise Cloud Platform
+# CENTRIA — India's Sovereign Company Operating System
 
 ![Centria Platform](frontend/assets/images/logo.jpg)
 
-Centria is a modern enterprise cloud platform engineered for high-availability identity management, seamless cross-platform orchestration, and zero-latency user experiences across Web, Android, and iOS.
+**Centria** is the unified Company Operating System engineered for Indian founders, directors, and growing enterprises. Connecting corporate governance, MCA/ROC statutory filings, GST compliance, banking enclaves, and autonomous workflows into one high-integrity workspace.
 
 ---
 
-## Executive Overview
+## 🇮🇳 India-First Corporate Architecture
 
-Centria provides an enterprise-tier operational foundation combining client-side fluidity with a resilient serverless cloud infrastructure. Designed with an Apple-grade visual design language, Centria eliminates traditional interface friction through parallelized authentication handshakes, local-first data caching, and graceful offline degradation.
+Centria is purpose-built to operate under Indian sovereign regulatory frameworks:
 
----
-
-## Architectural Highlights
-
-### 1. High-Performance Client Interface (Flutter)
-- **Apple-Grade Aesthetic**: Custom dark theme (`#090C16`) incorporating dynamic glassmorphism, calibrated tactile button feedback, and precision typography powered by Google Fonts Inter.
-- **Instantaneous Startup**: Cold-start entrance sequence completing in under 380 milliseconds, paired with a three-dot pulsing glowing indicator, completely bypassing traditional blocking loaders.
-- **Session-Aware Routing**: Zero-repeat splashscreen intelligence that persists navigation state through browser reloads, device interruptions, and user sign-out workflows.
-- **Contextual Form Ergonomics**: Progressive onboarding featuring locked, verified email fields that prevent redundant data entry while clearly demarcating non-editable identity attributes.
-- **Apple-Style Skeleton Shimmers**: Dynamic content placeholders ensuring seamless visual continuity during asynchronous data transfers.
-
-### 2. Scalable Cloud Backend (Django REST Framework)
-- **Hardened Authentication Engine**: Streamlined REST endpoints managing secure identity validation, credential verification, and account creation with normalized case handling.
-- **Enterprise Middleware Security**: Configured with strict CORS origin matching, CSRF trusted origin protections, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and HTTP Strict Transport Security (HSTS).
-- **Automated Health Monitoring**: Zero-downtime healthcheck probes at root (`/`) and dedicated monitoring routes (`/health/`, `/healthz`) for container orchestration.
-- **Edge Static Asset Pipeline**: WhiteNoise integration with compressed, manifest-hashed caching headers for optimal global delivery.
-
-### 3. Cloud Infrastructure & Services
-- **Database**: Serverless Neon PostgreSQL utilizing managed connection poolers for elastic scaling under high-concurrency enterprise workloads.
-- **Object Storage**: Neon Object Cloud (S3-compatible API) for secure, scalable media and binary persistence.
-- **Email Delivery**: Brevo transactional messaging infrastructure ensuring high-deliverability account communications.
-- **Frontend Hosting**: Vercel Global Edge Network with automated SPA rewrites and edge security headers.
-- **Backend Hosting**: Render Container Cloud with automated zero-downtime deployment pipelines and SSL termination.
+- **Corporate Jurisdiction:** Ministry of Corporate Affairs (MCA V3 Portal) & Registrar of Companies (ROC Bangalore, ROC Mumbai, ROC Hyderabad).
+- **Statutory Tracking:** Automated filing radar for Form AOC-4, Form MGT-7, Form DIR-12, GST GSTR-3B & GSTR-1, ITD Advance Tax & TDS Section 194J, and EPFO/ESIC remittances.
+- **National Currency:** Indian Rupee (INR / ₹) with native Indian numbering formatting (Lakhs & Crores).
+- **Banking Enclaves:** Multi-account treasury support across HDFC Bank, ICICI Bank, and State Bank of India (SBI).
+- **Enterprise Integrations:** Native adapters for **Razorpay** (UPI & NetBanking auto-reconciliation), **Zoho Books** (E-Invoicing & E-Way Bill sync), **TallyPrime** (MCA Rule 3 audit trail), and **AWS India ap-south-1** (Sovereign KMS Enclave).
 
 ---
 
-## Production Deployments
+## 🏛️ System Architecture
+
+Centria pairs a **modular Django monolith** backend with an adaptive **Flutter cross-platform client**:
+
+```
+[Flutter Client (Web, Android APK, iOS)]
+                │
+                ▼ HTTPS / REST (Versioned /api/v1/)
+[Django Core Modular Monolith]
+  ├── accounts        (User Identity, FIDO2 / Passkey Auth)
+  └── enterprise      (Sovereign Multi-Tenant Domain)
+        ├── Company & Membership (CIN, GSTIN, PAN, TAN, DIN)
+        ├── Tasks & Executive Project Streams
+        ├── Biometric Approvals (SHA-256 Merkle Block Hash)
+        ├── Banking Enclaves (HDFC, ICICI, SBI)
+        ├── Statutory Radar (MCA, GSTN, ITD, EPFO, ESIC)
+        └── Integrations (Razorpay, Zoho Books, TallyPrime)
+                │
+                ▼
+  [Neon Serverless PostgreSQL (Pooler, SSL, Asia/Kolkata)]
+```
+
+---
+
+## 🔒 Multi-Tenant Data Isolation
+
+- Every business record (`Task`, `ApprovalRequest`, `BankBalance`, `StatutoryObligation`, `AuditEvent`) is strictly scoped to an active `Company` tenant.
+- Tenant context is resolved server-side through membership authorization and the `X-Company-ID` request header.
+- Cross-tenant data access attempts return safe `HTTP 404 Not Found` responses to prevent IDOR and existence inference.
+- Every approval execution produces a deterministic cryptographic SHA-256 Merkle root hash chained into an immutable `AuditEvent` ledger.
+
+---
+
+## 🚀 Local Development & Testing
+
+### 1. Backend (Django + Neon PostgreSQL)
+
+```bash
+# Navigate to repository root
+cd DEVELOPMENT
+
+# Activate virtual environment
+source env/bin/activate
+
+# Install dependencies (if needed)
+pip install -r backend/requirements.txt
+
+# Run migrations against Neon PostgreSQL
+python backend/manage.py migrate
+
+# Run tenant isolation & API test suite
+python backend/manage.py test enterprise accounts
+
+# Start the Django development server
+python backend/manage.py runserver 8000
+```
+
+### 2. Frontend (Flutter)
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Analyze Dart code for precision quality (0 issues)
+flutter analyze
+
+# Run Flutter automated test suite
+flutter test
+
+# Run Flutter app locally (Web)
+flutter run -d chrome
+
+# Build production web bundle
+flutter build web --release
+```
+
+---
+
+## 🌐 Production Deployments
 
 | Component | Provider | Live Production URL |
 | :--- | :--- | :--- |
 | **Web Application** | Vercel Edge Network | [https://centria-enterprise.vercel.app/](https://centria-enterprise.vercel.app/) |
 | **API Backend** | Render Cloud Services | [https://centria-enterprise.onrender.com/](https://centria-enterprise.onrender.com/) |
-| **Database** | Neon Cloud | Serverless PostgreSQL (Pooler Enabled) |
-| **Android Release** | Release APK | `Centria-v1.0.0-1.apk` |
+| **Database** | Neon Cloud | Serverless PostgreSQL (ap-southeast-1 Pooler, SSL) |
 
 ---
 
-## Author & Leadership
+## 📚 Technical Documentation
+
+Detailed architectural and engineering documentation is available under `backend/docs/`:
+
+- [System Architecture](backend/docs/architecture.md)
+- [Data Model & Mermaid ER Diagram](backend/docs/data-model.md)
+- [REST API v1 Contract](backend/docs/api-contract.md)
+- [Sovereign Integrations Specification](backend/docs/integrations.md)
+
+---
+
+## 👨‍💼 Author & Leadership
 
 **Lead Developer & Architect:**  
 **Jason Kenneth N**  
 - **GitHub**: [@jasonkennethn](https://github.com/jasonkennethn)  
-- **Repository**: [https://github.com/jasonkennethn/Cen](https://github.com/jasonkennethn/Cen)  
+- **Repository**: [https://github.com/jasonkennethn/Centria](https://github.com/jasonkennethn/Centria)  
 - **Contact**: `jasonkennethn@gmail.com`  
 
-*Centria Enterprise Platform — Engineered with precision.*
+*Centria — India's Sovereign Company Operating System. Engineered with precision.*

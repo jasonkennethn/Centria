@@ -74,10 +74,11 @@ class MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CentriaCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
@@ -99,21 +100,27 @@ class MetricCard extends StatelessWidget {
               if (badge != null) badge!,
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: CentriaTypography.headlineMd.copyWith(
-              fontFamily: 'JetBrains Mono',
-              fontWeight: FontWeight.w600,
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: CentriaTypography.headlineMd.copyWith(
+                fontFamily: 'JetBrains Mono',
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               subtitle!,
               style: CentriaTypography.bodySm.copyWith(
                 color: CentriaColors.textMuted,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ],
@@ -171,11 +178,13 @@ class AIProposalCard extends StatelessWidget {
                     color: CentriaColors.cognitiveDeep,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: CentriaTypography.headlineSm.copyWith(
-                      color: CentriaColors.cognitiveDeep,
-                      fontSize: 15,
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: CentriaTypography.headlineSm.copyWith(
+                        color: CentriaColors.cognitiveDeep,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ],
