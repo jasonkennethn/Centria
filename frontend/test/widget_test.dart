@@ -1,10 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:centria/main.dart';
+import 'package:centria/app/app.dart';
 
 void main() {
-  testWidgets('App renders', (WidgetTester tester) async {
+  testWidgets('Centria App launches with Splash Screen', (WidgetTester tester) async {
     await tester.pumpWidget(const CentriaApp());
-    // Splash screen should show the app name
-    expect(find.text('Centria'), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    // Verify Centria Brand Header renders
+    expect(find.text('CENTRIA'), findsOneWidget);
+    expect(find.text('Authenticate Executive Enclave'), findsOneWidget);
+    expect(find.text('Provision New Corporate Tenant / Signup'), findsOneWidget);
   });
 }
