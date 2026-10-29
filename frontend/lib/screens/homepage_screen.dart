@@ -24,17 +24,39 @@ class _HomepageScreenState extends State<HomepageScreen> {
   void _openAuthModal({bool isSignUp = false}) {
     showDialog(
       context: context,
-      barrierColor: AppColors.ink.withOpacity(0.55),
+      barrierColor: AppColors.ink.withValues(alpha: 0.55),
       builder: (context) => _AuthModalDialog(initialSignUp: isSignUp),
     );
   }
 
   void _scrollToSection(String sectionKey) {
-    // Smooth scroll down
+    double target = 600;
+    switch (sectionKey) {
+      case 'product':
+        target = 450;
+        break;
+      case 'solutions':
+        target = 1350;
+        break;
+      case 'integrations':
+        target = 2650;
+        break;
+      case 'plans':
+        target = 3450;
+        break;
+      case 'resources':
+        target = 4250;
+        break;
+      case 'features':
+        target = 750;
+        break;
+      default:
+        target = 600;
+    }
     _scrollController.animateTo(
-      600,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
+      target,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
     );
   }
 
@@ -51,118 +73,53 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.paper,
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Column(
-          children: [
-            // 1. Announcement Bar
-            _buildAnnouncementBar(isMobile),
+      body: Column(
+        children: [
+          // 1. Locked Navigation Bar (Sticky at top)
+          _buildHeader(isMobile),
 
-            // 2. Sticky Header
-            _buildHeader(isMobile),
-
-            // 3. Hero Section
-            _buildHero(isMobile, width),
-
-            // 4. Trust Strip
-            _buildTrustStrip(isMobile),
-
-            // 5. Feature Section
-            _buildFeatures(isMobile),
-
-            // 6. Interactive Workflow Section
-            _buildWorkflowSection(isMobile),
-
-            // 7. Audience Section
-            _buildAudienceSection(isMobile),
-
-            // 8. Centria AI Grounded Evidence Section
-            _buildAiSection(isMobile),
-
-            // 9. Integrations Section
-            _buildIntegrationsSection(isMobile),
-
-            // 10. Security & Privacy Section
-            _buildSecuritySection(isMobile),
-
-            // 11. Pricing Section
-            _buildPricingSection(isMobile),
-
-            // 12. FAQ Section
-            _buildFaqSection(isMobile),
-
-            // 13. CTA Banner
-            _buildCtaBanner(isMobile),
-
-            // 14. Footer
-            _buildFooter(isMobile),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- 1. Announcement Bar ---
-  Widget _buildAnnouncementBar(bool isMobile) {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFFE8EEE2),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Center(
-        child: Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.75),
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: const Color(0xFFDCE5D5)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          // 2. Scrollable Body Content
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(color: Color(0xFF458368), shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'EARLY ACCESS',
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFF365448), letterSpacing: 0.8),
-                  ),
+                  _buildHero(isMobile, width),
+                  _buildTrustStrip(isMobile),
+                  _buildFeatures(isMobile),
+                  _buildWorkflowSection(isMobile),
+                  _buildAudienceSection(isMobile),
+                  _buildAiSection(isMobile),
+                  _buildIntegrationsSection(isMobile),
+                  _buildSecuritySection(isMobile),
+                  _buildPricingSection(isMobile),
+                  _buildFaqSection(isMobile),
+                  _buildCtaBanner(isMobile),
+                  _buildFooter(isMobile),
                 ],
               ),
             ),
-            Text(
-              "We're shaping Centria with teams who want work to feel simpler.",
-              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF365448), fontWeight: FontWeight.w500),
-            ),
-            GestureDetector(
-              onTap: () => _openAuthModal(isSignUp: true),
-              child: Text(
-                'Explore plans →',
-                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.teal, decoration: TextDecoration.underline),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // --- 2. Header ---
+  // --- 2. Locked Header ---
   Widget _buildHeader(bool isMobile) {
     return Container(
       height: 74,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.paper.withOpacity(0.92),
-        border: Border(bottom: BorderSide(color: AppColors.line.withOpacity(0.85))),
+        color: AppColors.paper.withValues(alpha: 0.98),
+        border: Border(bottom: BorderSide(color: AppColors.line.withValues(alpha: 0.85))),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Center(
         child: ConstrainedBox(
@@ -170,21 +127,30 @@ class _HomepageScreenState extends State<HomepageScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Brand
+              // Brand Logo + Text
               Row(
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.teal,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(color: AppColors.teal.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 20, fontWeight: FontWeight.w900)),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.teal,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(color: AppColors.teal.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 20, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -349,7 +315,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
             OutlinedButton(
               onPressed: () => _scrollToSection('features'),
               style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.7),
+                backgroundColor: Colors.white.withValues(alpha: 0.85),
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
               ),
               child: Row(
@@ -407,8 +373,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.line),
             boxShadow: [
-              BoxShadow(color: const Color(0xFF1D3E31).withOpacity(0.12), blurRadius: 60, offset: const Offset(0, 24)),
-              BoxShadow(color: const Color(0xFF1D3E31).withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+              BoxShadow(color: const Color(0xFF1D3E31).withValues(alpha: 0.12), blurRadius: 60, offset: const Offset(0, 24)),
+              BoxShadow(color: const Color(0xFF1D3E31).withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
             ],
           ),
           child: Column(
@@ -449,14 +415,16 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 ),
               ),
 
-              // Window Body (Side + Content)
-              IntrinsicHeight(
+              // Window Body (Side + Content) - Fixed layout to prevent CanvasKit collapse
+              ConstrainedBox(
+                constraints: BoxConstraints(minHeight: isMobile ? 320 : 380),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Sidebar
                     Container(
-                      width: isMobile ? 100 : 135,
+                      width: isMobile ? 105 : 140,
+                      constraints: BoxConstraints(minHeight: isMobile ? 320 : 380),
                       padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(
                         color: Color(0xFFFAFCF9),
@@ -556,7 +524,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
           color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: active ? const Color(0xFFDCE5DA) : Colors.transparent),
-          boxShadow: active ? [BoxShadow(color: AppColors.ink.withOpacity(0.04), blurRadius: 6)] : null,
+          boxShadow: active ? [BoxShadow(color: AppColors.ink.withValues(alpha: 0.04), blurRadius: 6)] : null,
         ),
         child: Text(
           label,
@@ -931,7 +899,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       crossAxisCount: cols,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: isMobile ? 1.4 : 1.3,
+                      childAspectRatio: cols == 1 ? 1.7 : (cols == 2 ? 1.35 : 1.25),
                     ),
                     itemCount: features.length,
                     itemBuilder: (context, index) {
@@ -942,6 +910,13 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           color: const Color(0xFFFCFDFA),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFE5EAE3)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.ink.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -950,7 +925,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: (f['color'] as Color).withOpacity(0.12),
+                                color: (f['color'] as Color).withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
@@ -1034,7 +1009,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
               color: active ? Colors.white : Colors.transparent,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: active ? const Color(0xFFDCE5DA) : Colors.transparent),
-              boxShadow: active ? [BoxShadow(color: AppColors.ink.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 4))] : null,
+              boxShadow: active ? [BoxShadow(color: AppColors.ink.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 4))] : null,
             ),
             child: Row(
               children: [
@@ -1090,7 +1065,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFDCE5DA)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF223E2F).withOpacity(0.06), blurRadius: 40, offset: const Offset(0, 16)),
+          BoxShadow(color: const Color(0xFF223E2F).withValues(alpha: 0.06), blurRadius: 40, offset: const Offset(0, 16)),
         ],
       ),
       child: Column(
@@ -1181,7 +1156,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 700 ? 1 : 3;
+                  int cols = constraints.maxWidth < 650 ? 1 : (constraints.maxWidth < 1000 ? 2 : 3);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -1189,7 +1164,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       crossAxisCount: cols,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: isMobile ? 1.2 : 0.95,
+                      childAspectRatio: cols == 1 ? 1.4 : (cols == 2 ? 1.15 : 0.88),
                     ),
                     itemCount: audiences.length,
                     itemBuilder: (context, index) {
@@ -1265,7 +1240,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color(0xFFE4DEF0)),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF33264B).withOpacity(0.08), blurRadius: 40, offset: const Offset(0, 16)),
+                    BoxShadow(color: const Color(0xFF33264B).withValues(alpha: 0.08), blurRadius: 40, offset: const Offset(0, 16)),
                   ],
                 ),
                 child: Column(
@@ -1496,10 +1471,38 @@ class _HomepageScreenState extends State<HomepageScreen> {
   // --- 11. Pricing Section ---
   Widget _buildPricingSection(bool isMobile) {
     final plans = [
-      {'name': 'Starter', 'price': '\$0', 'sub': 'Free forever', 'desc': 'Ideal for solo founders getting started.', 'btn': 'Start for free', 'featured': false},
-      {'name': 'Team / Growth', 'price': _isYearlyBilling ? '\$24' : '\$29', 'sub': 'per month', 'desc': 'For teams up to 25 managing active products.', 'btn': 'Join early access', 'featured': true},
-      {'name': 'Scale', 'price': _isYearlyBilling ? '\$64' : '\$79', 'sub': 'per month', 'desc': 'Advanced RAG queries, priority queues & integrations.', 'btn': 'Get Scale', 'featured': false},
-      {'name': 'Enterprise', 'price': '\$199', 'sub': 'per month', 'desc': 'Custom SLAs, dedicated AI quotas & enterprise support.', 'btn': 'Contact sales', 'featured': false},
+      {
+        'name': 'Starter',
+        'price': '₹0',
+        'sub': 'Free forever',
+        'desc': 'Ideal for solo founders getting started.',
+        'btn': 'Start for free',
+        'featured': false,
+      },
+      {
+        'name': 'Team / Growth',
+        'price': _isYearlyBilling ? '₹1,599' : '₹1,999',
+        'sub': 'per month',
+        'desc': 'For teams up to 25 managing active products.',
+        'btn': 'Join early access',
+        'featured': true,
+      },
+      {
+        'name': 'Scale',
+        'price': _isYearlyBilling ? '₹3,999' : '₹4,999',
+        'sub': 'per month',
+        'desc': 'Advanced RAG queries, priority queues & integrations.',
+        'btn': 'Get Scale',
+        'featured': false,
+      },
+      {
+        'name': 'Enterprise',
+        'price': '₹14,999',
+        'sub': 'per month',
+        'desc': 'Custom SLAs, dedicated AI quotas & enterprise support.',
+        'btn': 'Contact sales',
+        'featured': false,
+      },
     ];
 
     return Container(
@@ -1510,8 +1513,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 20,
+                runSpacing: 16,
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1523,11 +1529,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   ),
                   // Billing Toggle
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('Monthly', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: !_isYearlyBilling ? AppColors.ink : AppColors.muted)),
                       Switch(
                         value: _isYearlyBilling,
-                        activeColor: AppColors.teal,
+                        activeTrackColor: AppColors.teal,
                         onChanged: (val) => setState(() => _isYearlyBilling = val),
                       ),
                       Text('Yearly', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: _isYearlyBilling ? AppColors.ink : AppColors.muted)),
@@ -1546,7 +1553,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
               // Plans Grid
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 650 ? 1 : (constraints.maxWidth < 1000 ? 2 : 4);
+                  int cols = constraints.maxWidth < 650 ? 1 : (constraints.maxWidth < 1050 ? 2 : 4);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -1554,7 +1561,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       crossAxisCount: cols,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,
-                      childAspectRatio: isMobile ? 1.05 : 0.76,
+                      childAspectRatio: cols == 1 ? 1.35 : (cols == 2 ? 0.95 : 0.68),
                     ),
                     itemCount: plans.length,
                     itemBuilder: (context, index) {
@@ -1566,7 +1573,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           color: isFeatured ? const Color(0xFFF6FAF4) : const Color(0xFFFCFDFA),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: isFeatured ? const Color(0xFF6FA28C) : const Color(0xFFE1E7DF), width: isFeatured ? 1.8 : 1.0),
-                          boxShadow: isFeatured ? [BoxShadow(color: const Color(0xFF25573E).withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 8))] : null,
+                          boxShadow: isFeatured ? [BoxShadow(color: const Color(0xFF25573E).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))] : null,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1738,11 +1745,20 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
-                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 28,
+                          height: 28,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
+                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
@@ -1907,11 +1923,20 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
-                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 16, fontWeight: FontWeight.bold))),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 26,
+                          height: 26,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
+                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 16, fontWeight: FontWeight.bold))),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),

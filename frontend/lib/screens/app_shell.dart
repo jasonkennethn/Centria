@@ -139,7 +139,7 @@ class _AppShellState extends State<AppShell> {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: _liveNotifications.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.line),
+                    separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.line),
                     itemBuilder: (ctx, i) {
                       final n = _liveNotifications[i];
                       return ListTile(
@@ -212,7 +212,28 @@ class _AppShellState extends State<AppShell> {
       backgroundColor: AppColors.paper,
       appBar: isMobile
           ? AppBar(
-              title: Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 22,
+                      height: 22,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
+                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
+                ],
+              ),
               actions: [
                 IconButton(
                   icon: Badge(
@@ -373,11 +394,20 @@ class _AppShellState extends State<AppShell> {
           // Brand
           Row(
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(9)),
-                child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(9),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 30,
+                  height: 30,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(9)),
+                    child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Text('centria', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: AppColors.ink)),

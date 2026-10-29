@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/screens/splash_screen.dart';
 import 'package:centria/screens/homepage_screen.dart';
 import 'package:centria/screens/app_shell.dart';
+import 'package:centria/services/auth_state.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const CentriaApp());
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenSplash = prefs.getBool('centria_has_seen_splash') ?? false;
+  await AuthState().init();
+
+  runApp(CentriaApp(hasSeenSplash: hasSeenSplash));
 }
 
 class CentriaApp extends StatelessWidget {
-  const CentriaApp({super.key});
+  final bool hasSeenSplash;
+  const CentriaApp({super.key, this.hasSeenSplash = false});
 
   @override
   Widget build(BuildContext context) {
+    final String startRoute = !hasSeenSplash
+        ? '/splash'
+        : (AuthState().isAuthenticated ? '/dashboard' : '/');
+
     return MaterialApp(
       title: 'Centria — Company work, connected',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/splash',
+      initialRoute: startRoute,
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/': (context) => const HomepageScreen(),
@@ -32,3 +43,4 @@ class CentriaApp extends StatelessWidget {
     );
   }
 }
+

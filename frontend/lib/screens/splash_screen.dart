@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/auth_state.dart';
 
@@ -33,6 +34,10 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateAfterDelay() async {
     // 0.6s splash duration as requested in spec
     await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('centria_has_seen_splash', true);
+    } catch (_) {}
     await AuthState().init();
 
     if (!mounted) return;

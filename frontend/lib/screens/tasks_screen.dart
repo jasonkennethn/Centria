@@ -148,16 +148,21 @@ class _TasksScreenState extends State<TasksScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 12,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 6,
                       children: [
                         Text('Tasks & Issues', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
-                        const SizedBox(width: 12),
                         ValueListenableBuilder<bool>(
                           valueListenable: RealtimeService.instance.isConnected,
                           builder: (ctx, connected, _) => Container(
@@ -202,13 +207,23 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
             const SizedBox(height: 28),
 
-            // Kanban Columns
+            // Kanban Columns (Responsive: horizontal scroll on narrow mobile screens)
             Expanded(
               child: _isLoading
                   ? const Center(child: SkeletonLoader(width: double.infinity, height: 300))
                   : isMobile
-                      ? ListView(
-                          children: _columns.map((c) => _buildKanbanColumn(c['key']!, c['label']!)).toList(),
+                      ? SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: _columns.map((c) {
+                              return Container(
+                                width: 280,
+                                margin: const EdgeInsets.only(right: 12),
+                                child: _buildKanbanColumn(c['key']!, c['label']!),
+                              );
+                            }).toList(),
+                          ),
                         )
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,6 +284,13 @@ class _TasksScreenState extends State<TasksScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.line),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.ink.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
