@@ -43,8 +43,11 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 10,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,15 +67,32 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
             const SizedBox(height: 28),
 
             if (_isLoading)
-              const SkeletonLoader(width: double.infinity, height: 120)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 280,
+                  mainAxisExtent: 95,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                ),
+                itemCount: 3,
+                itemBuilder: (ctx, i) => const SkeletonLoader(width: double.infinity, height: 95, borderRadius: 16),
+              )
             else
-              Row(
+              GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 280,
+                  mainAxisExtent: 95,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                ),
                 children: [
-                  Expanded(child: _statCard('Total Companies', '${_adminData?['total_companies'] ?? 0}', Icons.domain)),
-                  const SizedBox(width: 14),
-                  Expanded(child: _statCard('Active Tenants', '${_adminData?['active_companies'] ?? 0}', Icons.verified)),
-                  const SizedBox(width: 14),
-                  Expanded(child: _statCard('Total Users', '${_adminData?['total_users'] ?? 0}', Icons.people)),
+                  _statCard('Total Companies', '${_adminData?['total_companies'] ?? 0}', Icons.domain),
+                  _statCard('Active Tenants', '${_adminData?['active_companies'] ?? 0}', Icons.verified),
+                  _statCard('Total Users', '${_adminData?['total_users'] ?? 0}', Icons.people),
                 ],
               ),
             const SizedBox(height: 32),

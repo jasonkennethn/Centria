@@ -227,35 +227,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 28),
 
-              // 4 Metrics Cards Row
+              // 4 Metrics Cards Grid (Dynamically auto-fitting across screen sizes)
               if (_isLoading)
-                Row(
-                  children: List.generate(4, (i) => Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(right: i < 3 ? 12 : 0),
-                      child: const SkeletonLoader(width: double.infinity, height: 110, borderRadius: 14),
-                    ),
-                  )),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 280,
+                    mainAxisExtent: 110,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
+                  itemCount: 4,
+                  itemBuilder: (ctx, i) => const SkeletonLoader(width: double.infinity, height: 110, borderRadius: 16),
                 )
               else
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    int cols = constraints.maxWidth < 600 ? 2 : 4;
-                    return GridView.count(
-                      crossAxisCount: cols,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: isMobile ? 1.4 : 1.7,
-                      children: [
-                        _metricCard('Active projects', '${metrics['active_projects'] ?? 0}', 'Across workspace', Icons.folder_outlined, AppColors.teal),
-                        _metricCard('Open issues', '${metrics['open_issues'] ?? 0}', '${metrics['urgent_issues'] ?? 0} urgent', Icons.check_box_outlined, AppColors.amber),
-                        _metricCard('Pending review', '${metrics['pending_reviews'] ?? 0}', 'Release gates active', Icons.verified_user_outlined, AppColors.teal2),
-                        _metricCard('Team members', '${user?['company_details']?['plan'] ?? 'Growth'}', 'Operational tier', Icons.people_outline, AppColors.violet),
-                      ],
-                    );
-                  },
+                GridView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 280,
+                    mainAxisExtent: 110,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                  ),
+                  children: [
+                    _metricCard('Active projects', '${metrics['active_projects'] ?? 0}', 'Across workspace', Icons.folder_outlined, AppColors.teal),
+                    _metricCard('Open issues', '${metrics['open_issues'] ?? 0}', '${metrics['urgent_issues'] ?? 0} urgent', Icons.check_box_outlined, AppColors.amber),
+                    _metricCard('Pending review', '${metrics['pending_reviews'] ?? 0}', 'Release gates active', Icons.verified_user_outlined, AppColors.teal2),
+                    _metricCard('Team members', '${user?['company_details']?['plan'] ?? 'Growth'}', 'Operational tier', Icons.people_outline, AppColors.violet),
+                  ],
                 ),
               const SizedBox(height: 32),
 
@@ -289,7 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _metricCard(String label, String value, String sub, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -304,6 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -312,10 +314,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(icon, size: 18, color: color),
             ],
           ),
-          const Spacer(),
-          Text(value, style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
-          const SizedBox(height: 4),
-          Text(sub, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+          Text(value, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+          Text(sub, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis),
         ],
       ),
     );

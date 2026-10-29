@@ -191,7 +191,16 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
 
   Widget _buildDocumentsGrid() {
     if (_isLoading) {
-      return const Center(child: SkeletonLoader(width: double.infinity, height: 250));
+      return GridView.builder(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 360,
+          mainAxisExtent: 155,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: 4,
+        itemBuilder: (ctx, i) => const SkeletonLoader(width: double.infinity, height: 155, borderRadius: 16),
+      );
     }
     if (_documents.isEmpty) {
       return Center(
@@ -210,10 +219,10 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
 
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 380,
+        maxCrossAxisExtent: 360,
+        mainAxisExtent: 155,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.5,
       ),
       itemCount: _documents.length,
       itemBuilder: (context, idx) {

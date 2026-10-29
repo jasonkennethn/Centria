@@ -186,7 +186,16 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
 
             Expanded(
               child: _isLoading
-                  ? const Center(child: SkeletonLoader(width: double.infinity, height: 250))
+                  ? ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (ctx, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 840),
+                          child: const SkeletonLoader(width: double.infinity, height: 160, borderRadius: 16),
+                        ),
+                      ),
+                    )
                   : _approvals.isEmpty
                       ? Center(child: Text('No approvals found under current filter.', style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)))
                       : ListView.builder(
@@ -196,24 +205,29 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
                             final isPending = app['status'] == 'pending';
                             final isApproved = app['status'] == 'approved';
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 14),
-                              padding: const EdgeInsets.all(22),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.line),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.ink.withValues(alpha: 0.02),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 2),
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 840),
+                                child: Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 14),
+                                  padding: const EdgeInsets.all(22),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.line),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.ink.withValues(alpha: 0.02),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -267,8 +281,10 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
                                     ),
                                 ],
                               ),
-                            );
-                          },
+                            ),
+                          ),
+                        );
+                      },
                         ),
             ),
           ],

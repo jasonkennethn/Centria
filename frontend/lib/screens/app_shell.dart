@@ -281,89 +281,107 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _buildTopBar(AuthState auth) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppColors.line)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Breadcrumb / Current page label
-          Text(
-            _getPageTitle(),
-            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 650;
+        return Container(
+          height: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: AppColors.line)),
           ),
-          Row(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: RealtimeService.instance.isConnected,
-                builder: (ctx, connected, _) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFE0E0E0)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: connected ? const Color(0xFF2E7D32) : const Color(0xFF9E9E9E),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        connected ? 'Neon DB Live' : 'Offline',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: connected ? const Color(0xFF2E7D32) : const Color(0xFF757575),
-                        ),
-                      ),
-                    ],
-                  ),
+              // Breadcrumb / Current page label
+              Flexible(
+                child: Text(
+                  _getPageTitle(),
+                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: _openAiAssistant,
-                icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),
-                label: Text('Centria Assistant', style: GoogleFonts.inter(color: AppColors.violet, fontWeight: FontWeight.w700)),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: Badge(
-                  isLabelVisible: _unreadNotifs > 0,
-                  label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
-                  child: const Icon(Icons.notifications_none_outlined, color: AppColors.ink, size: 22),
-                ),
-                tooltip: 'Notifications',
-                onPressed: _openNotificationsSheet,
-              ),
-              const SizedBox(width: 10),
-              // User Avatar
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(color: const Color(0xFFDFEAD5), borderRadius: BorderRadius.circular(10)),
-                child: Center(
-                  child: Text(
-                    auth.userName.isNotEmpty ? auth.userName[0].toUpperCase() : 'U',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF45643D)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ValueListenableBuilder<bool>(
+                    valueListenable: RealtimeService.instance.isConnected,
+                    builder: (ctx, connected, _) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFE0E0E0)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: connected ? const Color(0xFF2E7D32) : const Color(0xFF9E9E9E),
+                            ),
+                          ),
+                          if (!compact) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              connected ? 'Neon DB Live' : 'Offline',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: connected ? const Color(0xFF2E7D32) : const Color(0xFF757575),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  compact
+                      ? IconButton(
+                          onPressed: _openAiAssistant,
+                          icon: const Icon(Icons.auto_awesome, size: 18, color: AppColors.violet),
+                          tooltip: 'Centria Assistant',
+                        )
+                      : OutlinedButton.icon(
+                          onPressed: _openAiAssistant,
+                          icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),
+                          label: Text('Centria Assistant', style: GoogleFonts.inter(color: AppColors.violet, fontWeight: FontWeight.w700)),
+                        ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    icon: Badge(
+                      isLabelVisible: _unreadNotifs > 0,
+                      label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
+                      child: const Icon(Icons.notifications_none_outlined, color: AppColors.ink, size: 22),
+                    ),
+                    tooltip: 'Notifications',
+                    onPressed: _openNotificationsSheet,
+                  ),
+                  const SizedBox(width: 10),
+                  // User Avatar
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: const Color(0xFFDFEAD5), borderRadius: BorderRadius.circular(10)),
+                    child: Center(
+                      child: Text(
+                        auth.userName.isNotEmpty ? auth.userName[0].toUpperCase() : 'U',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF45643D)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

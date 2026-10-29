@@ -626,8 +626,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,6 +646,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     minimumSize: Size.zero,
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.add, size: 10),
                       const SizedBox(width: 4),
@@ -885,7 +889,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       maxCrossAxisExtent: 380,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      mainAxisExtent: 220,
+                      mainAxisExtent: 240,
                     ),
                     itemCount: features.length,
                     itemBuilder: (context, index) {
@@ -1156,7 +1160,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       maxCrossAxisExtent: 380,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      mainAxisExtent: 320,
+                      mainAxisExtent: 380,
                     ),
                     itemCount: audiences.length,
                     itemBuilder: (context, index) {
@@ -1436,7 +1440,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       maxCrossAxisExtent: 340,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,
-                      mainAxisExtent: 220,
+                      mainAxisExtent: 240,
                     ),
                     itemCount: securityCards.length,
                     itemBuilder: (context, index) {
@@ -1565,7 +1569,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       maxCrossAxisExtent: 340,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      mainAxisExtent: 380,
+                      mainAxisExtent: 340,
                     ),
                     itemCount: plans.length,
                     itemBuilder: (context, index) {
@@ -1831,6 +1835,7 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
   final _companyNameController = TextEditingController();
   final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _otpSent = false;
 
@@ -1848,6 +1853,7 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
     _companyNameController.dispose();
     _otpController.dispose();
     _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -1861,6 +1867,10 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
     try {
       if (_isForgotPassword) {
         if (!_otpSent) {
+          if (_emailController.text.trim().isEmpty) {
+            setState(() => _errorMessage = 'Please enter your work email.');
+            return;
+          }
           final res = await ApiService.forgotPassword(_emailController.text.trim());
           if (res['success']) {
             setState(() {
@@ -1871,6 +1881,18 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
             setState(() => _errorMessage = res['error'] ?? 'Failed to send OTP.');
           }
         } else {
+          if (_otpController.text.trim().isEmpty) {
+            setState(() => _errorMessage = 'Please enter the 6-digit verification code.');
+            return;
+          }
+          if (_newPasswordController.text.length < 8) {
+            setState(() => _errorMessage = 'New password must be at least 8 characters.');
+            return;
+          }
+          if (_newPasswordController.text != _confirmPasswordController.text) {
+            setState(() => _errorMessage = 'New password and re-typed password do not match.');
+            return;
+          }
           final res = await ApiService.resetPassword(
             email: _emailController.text.trim(),
             otpCode: _otpController.text.trim(),
@@ -1881,6 +1903,9 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
               _isForgotPassword = false;
               _isSignUp = false;
               _otpSent = false;
+              _otpController.clear();
+              _newPasswordController.clear();
+              _confirmPasswordController.clear();
               _successMessage = 'Password reset! You can now sign in.';
             });
           } else {
@@ -1971,14 +1996,16 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
 
               Text(
                 _isForgotPassword
-                    ? (_otpSent ? 'Enter Verification Code' : 'Reset Password')
+                    ? (_otpSent ? 'Create New Password' : 'Reset Password')
                     : (_isSignUp ? 'Create Workspace' : 'Sign In to Centria'),
                 style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.6),
               ),
               const SizedBox(height: 6),
               Text(
                 _isForgotPassword
-                    ? 'Enter your account email to receive a 6-digit OTP code.'
+                    ? (_otpSent
+                        ? 'Enter the 6-digit code sent to your email and choose a new password.'
+                        : 'Enter your account email to receive a 6-digit verification code.')
                     : (_isSignUp ? 'Get your team workspace up and running in 30 seconds.' : 'Enter your email and password to access your workspace.'),
                 style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
               ),
@@ -2029,23 +2056,29 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Password', hintText: '••••••••'),
                 ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _isForgotPassword = true;
-                      _errorMessage = null;
-                      _successMessage = null;
-                    }),
-                    child: Text('Forgot password?', style: GoogleFonts.inter(fontSize: 11, color: AppColors.teal)),
+                // Forgot password button ONLY at sign in, never at create workspace
+                if (!_isSignUp) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => setState(() {
+                        _isForgotPassword = true;
+                        _otpSent = false;
+                        _errorMessage = null;
+                        _successMessage = null;
+                      }),
+                      child: Text('Forgot password?', style: GoogleFonts.inter(fontSize: 11, color: AppColors.teal)),
+                    ),
                   ),
-                ),
+                ],
               ],
 
+              // After asking OTP, then only ask new password and re-type password
               if (_isForgotPassword && _otpSent) ...[
                 TextField(
                   controller: _otpController,
+                  keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: '6-digit OTP Code', hintText: '123456'),
                 ),
                 const SizedBox(height: 12),
@@ -2053,6 +2086,12 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   controller: _newPasswordController,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'New Password', hintText: 'At least 8 characters'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Re-type New Password', hintText: 'Confirm your new password'),
                 ),
                 const SizedBox(height: 14),
               ],
@@ -2064,7 +2103,7 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   onPressed: _isLoading ? null : _handleSubmit,
                   child: _isLoading
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(_isForgotPassword ? (_otpSent ? 'Set New Password' : 'Send Verification Code') : (_isSignUp ? 'Create Workspace' : 'Sign In')),
+                      : Text(_isForgotPassword ? (_otpSent ? 'Update Password' : 'Send Verification Code') : (_isSignUp ? 'Create Workspace' : 'Sign In')),
                 ),
               ),
 
@@ -2072,13 +2111,19 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
               Center(
                 child: TextButton(
                   onPressed: () => setState(() {
-                    _isForgotPassword = false;
-                    _isSignUp = !_isSignUp;
+                    if (_isForgotPassword) {
+                      _isForgotPassword = false;
+                      _otpSent = false;
+                    } else {
+                      _isSignUp = !_isSignUp;
+                    }
                     _errorMessage = null;
                     _successMessage = null;
                   }),
                   child: Text(
-                    _isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one",
+                    _isForgotPassword
+                        ? '← Back to Sign In'
+                        : (_isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one"),
                     style: GoogleFonts.inter(fontSize: 12, color: AppColors.teal, fontWeight: FontWeight.w600),
                   ),
                 ),

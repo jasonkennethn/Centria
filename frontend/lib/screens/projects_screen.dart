@@ -106,15 +106,24 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
             Expanded(
               child: _isLoading
-                  ? const Center(child: SkeletonLoader(width: double.infinity, height: 200))
+                  ? GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 380,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        mainAxisExtent: 185,
+                      ),
+                      itemCount: 3,
+                      itemBuilder: (ctx, i) => const SkeletonLoader(width: double.infinity, height: 185, borderRadius: 16),
+                    )
                   : _projects.isEmpty
                       ? Center(child: Text('No projects yet. Create your first project!', style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)))
                       : GridView.builder(
                           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 420,
+                            maxCrossAxisExtent: 380,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            childAspectRatio: 1.35,
+                            mainAxisExtent: 185,
                           ),
                           itemCount: _projects.length,
                           itemBuilder: (context, index) {

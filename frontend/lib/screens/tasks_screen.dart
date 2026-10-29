@@ -207,26 +207,36 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
             const SizedBox(height: 28),
 
-            // Kanban Columns (Responsive: horizontal scroll on narrow mobile screens)
+            // Kanban Columns (Responsive: horizontal scroll on screens < 1140px, full stretch on desktop)
             Expanded(
               child: _isLoading
-                  ? const Center(child: SkeletonLoader(width: double.infinity, height: 300))
-                  : isMobile
+                  ? Row(
+                      children: List.generate(
+                        isMobile ? 1 : 4,
+                        (i) => Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(right: i < 3 ? 12 : 0),
+                            child: const SkeletonLoader(width: double.infinity, height: double.infinity, borderRadius: 16),
+                          ),
+                        ),
+                      ),
+                    )
+                  : width < 1140
                       ? SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: _columns.map((c) {
                               return Container(
-                                width: 280,
-                                margin: const EdgeInsets.only(right: 12),
+                                width: 290,
+                                margin: const EdgeInsets.only(right: 14),
                                 child: _buildKanbanColumn(c['key']!, c['label']!),
                               );
                             }).toList(),
                           ),
                         )
                       : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: _columns.map((c) {
                             return Expanded(
                               child: Padding(
