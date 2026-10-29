@@ -1,46 +1,31 @@
-# Python / Django
+# Environment & Secrets
+.env
+backend/.env
 env/
-__pycache__/
-*.pyc
-*.pyo
-db.sqlite3
-backend/staticfiles/
-*.egg-info/
+venv/
+*.env
 
-# Flutter
+# Python & Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+staticfiles/
+media/
+*.log
+
+# Flutter & Dart
 frontend/.dart_tool/
-frontend/.packages
 frontend/build/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
-frontend/.pub/
+frontend/.packages
+.pub-cache/
+.pub/
 
-# Environment & Secrets
-.env
-.env.*
-!.env.example
-*.env
-backend/.env
-frontend/.env
-*.pem
-*.key
-*.p8
-*.p12
-*.jks
-*.keystore
-key.properties
-local.properties
-
-# IDE
-.idea/
+# IDE & OS
 .vscode/
+.idea/
 *.swp
-*.swo
-*~
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log

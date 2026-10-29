@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: centria-backend
+    runtime: python
+    region: singapore
+    plan: starter
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py seed_data"
+    startCommand: "gunicorn centria_backend.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: centria_backend.settings.prod
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "centria-enterprise.onrender.com,localhost,127.0.0.1"
+      - key: FRONTEND_URL
+        value: "https://centria-enterprise.vercel.app"
+      - key: BACKEND_URL
+        value: "https://centria-enterprise.onrender.com"
+      - key: DATABASE_URL
+        sync: false
+      - key: AWS_ENDPOINT_URL_S3
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: ap-southeast-1
+      - key: S3_BUCKET_NAME
+        value: centria-media
+      - key: BREVO_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: models/gemini-2.5-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: models/gemini-embedding-001

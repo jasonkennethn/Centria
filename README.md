@@ -1,128 +1,135 @@
-# CENTRIA — India's Sovereign Company Operating System
+# Centria — Company Operating System
 
-![Centria Platform](frontend/assets/images/logo.jpg)
-
-**Centria** is the unified Company Operating System engineered for Indian founders, directors, and growing enterprises. Connecting corporate governance, MCA/ROC statutory filings, GST compliance, banking enclaves, and autonomous workflows into one high-integrity workspace.
-
----
-
-## 🇮🇳 India-First Corporate Architecture
-
-Centria is purpose-built to operate under Indian sovereign regulatory frameworks:
-
-- **Corporate Jurisdiction:** Ministry of Corporate Affairs (MCA V3 Portal) & Registrar of Companies (ROC Bangalore, ROC Mumbai, ROC Hyderabad).
-- **Statutory Tracking:** Automated filing radar for Form AOC-4, Form MGT-7, Form DIR-12, GST GSTR-3B & GSTR-1, ITD Advance Tax & TDS Section 194J, and EPFO/ESIC remittances.
-- **National Currency:** Indian Rupee (INR / ₹) with native Indian numbering formatting (Lakhs & Crores).
-- **Banking Enclaves:** Multi-account treasury support across HDFC Bank, ICICI Bank, and State Bank of India (SBI).
-- **Enterprise Integrations:** Native adapters for **Razorpay** (UPI & NetBanking auto-reconciliation), **Zoho Books** (E-Invoicing & E-Way Bill sync), **TallyPrime** (MCA Rule 3 audit trail), and **AWS India ap-south-1** (Sovereign KMS Enclave).
+> AI-assisted company and product operations platform for small B2B software and IT-services teams.  
+> Long-term ambition: a configurable Company Operating System connecting projects, issues, knowledge, and operational approvals in one unified workspace.
 
 ---
 
-## 🏛️ System Architecture
+## 🚀 Live Deployments
 
-Centria pairs a **modular Django monolith** backend with an adaptive **Flutter cross-platform client**:
+- **Frontend Application (Vercel):** [https://centria-enterprise.vercel.app/](https://centria-enterprise.vercel.app/)
+- **Backend API & Admin (Render):** [https://centria-enterprise.onrender.com/](https://centria-enterprise.onrender.com/)
+- **GitHub Repository:** [https://github.com/jasonkennethn/Centria.git](https://github.com/jasonkennethn/Centria.git)
+
+---
+
+## 🛠 Tech Stack
+
+| Component | Technology | Purpose |
+|---|---|---|
+| **Frontend** | Flutter (Web + Android + iOS) | Responsive web & native mobile interfaces with zero-lag skeleton loading |
+| **Backend** | Django 5.x / 6.x + DRF + django-q2 | Multi-tenant REST APIs, background task queue & audit trail |
+| **Database** | NeonDB (PostgreSQL + pgvector) | Serverless relational storage with native 3072-dim vector cosine similarity |
+| **Object Cloud** | Neon Object Cloud (S3-compatible) | High-fidelity AVIF image compression pipeline & document store |
+| **Grounded AI** | Google Gemini (2.5 Flash + Embedding 001) | Ground-truth AI assistant with verifiable citations |
+| **Transactional Email** | Brevo API (`no-reply@celarox.com`) | 6-digit OTP verification & password recovery |
+| **Deployment** | Vercel (Frontend) + Render (Backend) | Continuous cloud deployment with auto SSL & security headers |
+
+---
+
+## 📁 Repository Structure
 
 ```
-[Flutter Client (Web, Android APK, iOS)]
-                │
-                ▼ HTTPS / REST (Versioned /api/v1/)
-[Django Core Modular Monolith]
-  ├── accounts        (User Identity, FIDO2 / Passkey Auth)
-  └── enterprise      (Sovereign Multi-Tenant Domain)
-        ├── Company & Membership (CIN, GSTIN, PAN, TAN, DIN)
-        ├── Tasks & Executive Project Streams
-        ├── Biometric Approvals (SHA-256 Merkle Block Hash)
-        ├── Banking Enclaves (HDFC, ICICI, SBI)
-        ├── Statutory Radar (MCA, GSTN, ITD, EPFO, ESIC)
-        └── Integrations (Razorpay, Zoho Books, TallyPrime)
-                │
-                ▼
-  [Neon Serverless PostgreSQL (Pooler, SSL, Asia/Kolkata)]
+├── backend/                  # Django backend service
+│   ├── centria_backend/      # Project settings (base, dev, prod), WSGI, ASGI, URLs
+│   ├── core/                 # Multi-tenant Company, User, dynamic Roles, OTP auth
+│   ├── projects/             # Projects, Tasks (Kanban), Task Comments, Customers
+│   ├── documents/            # PDF/DOCX text extraction, chunking, pgvector indexing
+│   ├── ai_engine/            # Grounded AI assistant, RAG citations, quota manager
+│   ├── approvals/            # Operational approval workflows & release gates
+│   ├── integrations/         # GitHub repository linking & PR synchronization
+│   ├── audit/                # Immutable activity & compliance audit logging
+│   ├── media_pipeline/       # Pillow AVIF image conversion & Neon S3 storage
+│   ├── render.yaml           # Render deployment configuration
+│   └── requirements.txt      # Python dependencies
+│
+├── frontend/                 # Flutter application (Web & Mobile)
+│   ├── lib/
+│   │   ├── main.dart         # Entry point & platform-aware routing
+│   │   ├── theme/            # Design system, Inter typography & curated colors
+│   │   ├── services/         # ApiService (REST HTTP) & AuthState (ChangeNotifier)
+│   │   ├── widgets/          # AiAssistantSheet, SkeletonLoader
+│   │   └── screens/          # Splash (0.6s), Homepage, AppShell, Dashboard,
+│   │                         # Projects, Tasks (Kanban), Knowledge, Approvals, Admin
+│   ├── assets/               # Branding assets (logo.png)
+│   ├── web/                  # Web manifest, icons, index.html
+│   └── vercel.json           # Vercel deployment configuration
+│
+└── .gitignore                # Git ignore rules for secrets, builds, and venv
 ```
 
 ---
 
-## 🔒 Multi-Tenant Data Isolation
+## 🔑 Key Features
 
-- Every business record (`Task`, `ApprovalRequest`, `BankBalance`, `StatutoryObligation`, `AuditEvent`) is strictly scoped to an active `Company` tenant.
-- Tenant context is resolved server-side through membership authorization and the `X-Company-ID` request header.
-- Cross-tenant data access attempts return safe `HTTP 404 Not Found` responses to prevent IDOR and existence inference.
-- Every approval execution produces a deterministic cryptographic SHA-256 Merkle root hash chained into an immutable `AuditEvent` ledger.
+### 1. Multi-Tenant Workspace Isolation
+- Dynamic company isolation enforced on every query via `CompanyIsolationMiddleware`.
+- Granular role permissions (`Owner`, `Admin`, `Project Manager`, `Member`, `Viewer`).
+- Platform superadmin portal for `jasonkennethn@gmail.com`.
+
+### 2. Evidence-First Grounded AI (RAG)
+- Upload PDF, Word (`.docx`), and Markdown documents.
+- Chunks and embeds text using 3072-dimensional Gemini embeddings stored in NeonDB pgvector.
+- Retrieves exact citations with similarity match percentages displayed side-by-side with assistant answers.
+
+### 3. Integrated Project & Issue Execution
+- Interactive Kanban boards (To Do, In Progress, In Review, Done).
+- Link GitHub branches, pull requests, and commits directly to task cards.
+- Customer management CRM for B2B client deliverables.
+
+### 4. Operational Gatekeeper & Approval Workflows
+- Submit release gatekeeper approvals, scope modifications, and budget requests.
+- Designated approvers review, sign off, or reject with timestamped decision notes.
+- Immutable audit log tracking all actions across the organization.
+
+### 5. Media Pipeline with AVIF Optimization
+- Any uploaded image is automatically transformed into AVIF format via Pillow.
+- Reduces asset payloads by up to 80% while retaining high visual fidelity.
+- Stored directly in Neon Object Cloud S3.
 
 ---
 
-## 🚀 Local Development & Testing
+## ⚡ Getting Started Locally
 
-### 1. Backend (Django + Neon PostgreSQL)
-
+### 1. Backend Setup
 ```bash
-# Navigate to repository root
-cd DEVELOPMENT
+# Clone the repository
+git clone https://github.com/jasonkennethn/Centria.git
+cd Centria
 
-# Activate virtual environment
+# Activate the virtual environment
+python3 -m venv env
 source env/bin/activate
 
-# Install dependencies (if needed)
-pip install -r backend/requirements.txt
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
 
-# Run migrations against Neon PostgreSQL
-python backend/manage.py migrate
+# Configure backend/.env
+# (Populate DATABASE_URL, GEMINI_API_KEY, BREVO_API_KEY, AWS_* credentials)
 
-# Run tenant isolation & API test suite
-python backend/manage.py test enterprise accounts
+# Run migrations and seed data
+python manage.py migrate
+python manage.py seed_data
 
-# Start the Django development server
-python backend/manage.py runserver 8000
+# Start development server
+python manage.py runserver 0.0.0.0:8000
 ```
 
-### 2. Frontend (Flutter)
-
+### 2. Frontend Setup
 ```bash
-# Navigate to frontend directory
-cd frontend
+cd ../frontend
 
-# Analyze Dart code for precision quality (0 issues)
-flutter analyze
+# Fetch Flutter dependencies
+flutter pub get
 
-# Run Flutter automated test suite
-flutter test
-
-# Run Flutter app locally (Web)
+# Run on Chrome
 flutter run -d chrome
 
-# Build production web bundle
+# Or build release web bundle
 flutter build web --release
 ```
 
----
-
-## 🌐 Production Deployments
-
-| Component | Provider | Live Production URL |
-| :--- | :--- | :--- |
-| **Web Application** | Vercel Edge Network | [https://centria-enterprise.vercel.app/](https://centria-enterprise.vercel.app/) |
-| **API Backend** | Render Cloud Services | [https://centria-enterprise.onrender.com/](https://centria-enterprise.onrender.com/) |
-| **Database** | Neon Cloud | Serverless PostgreSQL (ap-southeast-1 Pooler, SSL) |
-
----
-
-## 📚 Technical Documentation
-
-Detailed architectural and engineering documentation is available under `backend/docs/`:
-
-- [System Architecture](backend/docs/architecture.md)
-- [Data Model & Mermaid ER Diagram](backend/docs/data-model.md)
-- [REST API v1 Contract](backend/docs/api-contract.md)
-- [Sovereign Integrations Specification](backend/docs/integrations.md)
-
----
-
-## 👨‍💼 Author & Leadership
-
-**Lead Developer & Architect:**  
-**Jason Kenneth N**  
-- **GitHub**: [@jasonkennethn](https://github.com/jasonkennethn)  
-- **Repository**: [https://github.com/jasonkennethn/Centria](https://github.com/jasonkennethn/Centria)  
-- **Contact**: `jasonkennethn@gmail.com`  
-
-*Centria — India's Sovereign Company Operating System. Engineered with precision.*
+### 3. Default Demo Credentials
+- **Platform Superadmin:** `jasonkennethn@gmail.com` / `CentriaAdmin@2026!`
+- **Demo Workspace Lead:** `priya@northstar.io` / `Northstar@2026!`

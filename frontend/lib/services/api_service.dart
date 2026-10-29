@@ -1,309 +1,361 @@
-import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const Duration _timeout = Duration(seconds: 15);
+  static const String _renderUrl = 'https://centria-enterprise.onrender.com';
+  static const String _localUrl = 'http://127.0.0.1:8000';
 
-  /// Root host for API (Render in production/release, localhost in debug web/desktop, 10.0.2.2 in Android emulator)
-  static String get apiHost {
-    const envUrl = String.fromEnvironment('API_URL');
-    if (envUrl.isNotEmpty) {
-      final clean = envUrl.endsWith('/') ? envUrl.substring(0, envUrl.length - 1) : envUrl;
-      return clean.replaceAll('/api/auth', '').replaceAll('/api/v1', '');
-    }
+  // In development, default to local if accessible, else Render
+  static String baseUrl = kReleaseMode ? _renderUrl : _localUrl;
 
-    if (!kDebugMode) {
-      return 'https://centria-enterprise.onrender.com';
-    }
-
-    if (kIsWeb) {
-      return 'http://localhost:8000';
-    }
-    return 'http://10.0.2.2:8000';
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('access_token');
   }
 
-  static String get authUrl => '$apiHost/api/auth';
-  static String get apiV1Url => '$apiHost/api/v1';
+  static Future<void> saveTokens({required String access, required String refresh}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('access_token', access);
+    await prefs.setString('refresh_token', refresh);
+  }
 
-  // Backward compatibility alias for legacy callers
-  static String get baseUrl => authUrl;
+  static Future<void> clearTokens() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
+    await prefs.remove('user_data');
+  }
 
-  // Active Company Tenant Context (can be passed via X-Company-ID header)
-  static String? activeCompanyId;
-
-  static Map<String, String> _buildHeaders() {
-    final headers = <String, String>{
+  static Future<Map<String, String>> _headers({bool needsAuth = true}) async {
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    if (activeCompanyId != null && activeCompanyId!.isNotEmpty) {
-      headers['X-Company-ID'] = activeCompanyId!;
+    if (needsAuth) {
+      final token = await getToken();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
     }
     return headers;
   }
 
-  // --- AUTH ENDPOINTS ---
+  // --- Auth APIs ---
 
-  static Future<Map<String, dynamic>> checkEmail(String email) async {
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$authUrl/check-email/'),
-            headers: _buildHeaders(),
-            body: jsonEncode({'email': email}),
-          )
-          .timeout(_timeout);
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body);
-      }
-      final body = jsonDecode(response.body);
-      throw Exception(body['error'] ?? 'Failed to verify email');
-    } on TimeoutException {
-      throw Exception('Server took too long to respond. Please try again.');
-    } catch (e) {
-      if (e.toString().contains('SocketException') ||
-          e.toString().contains('Failed host lookup')) {
-        throw Exception('Unable to reach server. Please check your connection.');
-      }
-      rethrow;
-    }
-  }
-
-  static Future<Map<String, dynamic>> login(
-    String email,
-    String password,
-  ) async {
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$authUrl/login/'),
-            headers: _buildHeaders(),
-            body: jsonEncode({'email': email, 'password': password}),
-          )
-          .timeout(_timeout);
-
-      final body = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        return body;
-      }
-      throw Exception(body['error'] ?? 'Invalid credentials');
-    } on TimeoutException {
-      throw Exception('Server took too long to respond. Please try again.');
-    } catch (e) {
-      if (e.toString().contains('SocketException') ||
-          e.toString().contains('Failed host lookup')) {
-        throw Exception('Unable to reach server. Please check your connection.');
-      }
-      rethrow;
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    final url = Uri.parse('$baseUrl/api/auth/login/');
+    final res = await http.post(
+      url,
+      headers: await _headers(needsAuth: false),
+      body: jsonEncode({'email': email.trim(), 'password': password}),
+    );
+    final data = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      await saveTokens(access: data['access'], refresh: data['refresh']);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', jsonEncode(data['user']));
+      return {'success': true, 'data': data};
+    } else {
+      final err = data['detail'] ?? data['error'] ?? 'Sign in failed. Check your credentials.';
+      return {'success': false, 'error': err.toString()};
     }
   }
 
   static Future<Map<String, dynamic>> register({
+    required String companyName,
+    required String fullName,
     required String email,
     required String password,
-    required String firstName,
-    required String lastName,
   }) async {
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$authUrl/register/'),
-            headers: _buildHeaders(),
-            body: jsonEncode({
-              'email': email,
-              'password': password,
-              'first_name': firstName,
-              'last_name': lastName,
-            }),
-          )
-          .timeout(_timeout);
-
-      final body = jsonDecode(response.body);
-      if (response.statusCode == 201) {
-        return body;
-      }
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final first = errors.values.first;
-        final msg = first is List ? first.first : first.toString();
-        throw Exception(msg);
-      }
-      throw Exception(body['error'] ?? 'Registration failed. Please try again.');
-    } on TimeoutException {
-      throw Exception('Server took too long to respond. Please try again.');
-    } catch (e) {
-      if (e.toString().contains('SocketException') ||
-          e.toString().contains('Failed host lookup')) {
-        throw Exception('Unable to reach server. Please check your connection.');
-      }
-      rethrow;
-    }
-  }
-
-  // --- ENTERPRISE API V1 ENDPOINTS ---
-
-  /// GET /api/v1/overview/
-  static Future<Map<String, dynamic>> getOverview() async {
-    try {
-      final res = await http
-          .get(Uri.parse('$apiV1Url/overview/'), headers: _buildHeaders())
-          .timeout(_timeout);
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body);
-      }
-      throw Exception('Overview fetch failed with code ${res.statusCode}');
-    } catch (e) {
-      return <String, dynamic>{};
-    }
-  }
-
-  /// GET /api/v1/tasks/
-  static Future<List<Map<String, dynamic>>> getTasks({String? status}) async {
-    try {
-      final uri = status != null
-          ? Uri.parse('$apiV1Url/tasks/?status=$status')
-          : Uri.parse('$apiV1Url/tasks/');
-      final res = await http.get(uri, headers: _buildHeaders()).timeout(_timeout);
-      if (res.statusCode == 200) {
-        final list = jsonDecode(res.body) as List;
-        return list.map((item) => item as Map<String, dynamic>).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// POST /api/v1/tasks/
-  static Future<Map<String, dynamic>> createTask(Map<String, dynamic> data) async {
-    final res = await http
-        .post(
-          Uri.parse('$apiV1Url/tasks/'),
-          headers: _buildHeaders(),
-          body: jsonEncode(data),
-        )
-        .timeout(_timeout);
+    final url = Uri.parse('$baseUrl/api/auth/register/');
+    final res = await http.post(
+      url,
+      headers: await _headers(needsAuth: false),
+      body: jsonEncode({
+        'company_name': companyName.trim(),
+        'full_name': fullName.trim(),
+        'email': email.trim(),
+        'password': password,
+      }),
+    );
+    final data = jsonDecode(res.body);
     if (res.statusCode == 201) {
-      return jsonDecode(res.body);
-    }
-    throw Exception('Failed to create task: ${res.body}');
-  }
-
-  /// PATCH /api/v1/tasks/{id}/
-  static Future<Map<String, dynamic>> updateTask(String taskId, Map<String, dynamic> data) async {
-    final res = await http
-        .patch(
-          Uri.parse('$apiV1Url/tasks/$taskId/'),
-          headers: _buildHeaders(),
-          body: jsonEncode(data),
-        )
-        .timeout(_timeout);
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body);
-    }
-    throw Exception('Failed to update task: ${res.body}');
-  }
-
-  /// DELETE /api/v1/tasks/{id}/
-  static Future<bool> deleteTask(String taskId) async {
-    final res = await http
-        .delete(Uri.parse('$apiV1Url/tasks/$taskId/'), headers: _buildHeaders())
-        .timeout(_timeout);
-    return res.statusCode == 204;
-  }
-
-  /// GET /api/v1/approvals/
-  static Future<List<Map<String, dynamic>>> getApprovals({String? status}) async {
-    try {
-      final uri = status != null
-          ? Uri.parse('$apiV1Url/approvals/?status=$status')
-          : Uri.parse('$apiV1Url/approvals/');
-      final res = await http.get(uri, headers: _buildHeaders()).timeout(_timeout);
-      if (res.statusCode == 200) {
-        final list = jsonDecode(res.body) as List;
-        return list.map((item) => item as Map<String, dynamic>).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
+      await saveTokens(access: data['access'], refresh: data['refresh']);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', jsonEncode(data['user']));
+      return {'success': true, 'data': data};
+    } else {
+      final err = data['email'] ?? data['error'] ?? data['detail'] ?? 'Registration failed.';
+      return {'success': false, 'error': err is List ? err.first : err.toString()};
     }
   }
 
-  /// POST /api/v1/approvals/{id}/execute/
-  static Future<Map<String, dynamic>> executeApproval(
-    String approvalId, {
-    String action = 'APPROVE',
-    String? decisionNote,
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final url = Uri.parse('$baseUrl/api/auth/forgot-password/');
+    final res = await http.post(
+      url,
+      headers: await _headers(needsAuth: false),
+      body: jsonEncode({'email': email.trim()}),
+    );
+    return {'success': res.statusCode == 200, 'data': jsonDecode(res.body)};
+  }
+
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String otpCode,
+    required String newPassword,
   }) async {
-    final res = await http
-        .post(
-          Uri.parse('$apiV1Url/approvals/$approvalId/execute/'),
-          headers: _buildHeaders(),
-          body: jsonEncode({
-            'action': action,
-            'decision_note': decisionNote ?? 'Biometric ratification completed via Director Secure Enclave.',
-          }),
-        )
-        .timeout(_timeout);
+    final url = Uri.parse('$baseUrl/api/auth/reset-password/');
+    final res = await http.post(
+      url,
+      headers: await _headers(needsAuth: false),
+      body: jsonEncode({
+        'email': email.trim(),
+        'otp_code': otpCode.trim(),
+        'new_password': newPassword,
+      }),
+    );
+    final data = jsonDecode(res.body);
     if (res.statusCode == 200) {
-      return jsonDecode(res.body);
+      return {'success': true, 'message': data['message']};
+    } else {
+      return {'success': false, 'error': data['error'] ?? 'Failed to reset password.'};
     }
-    throw Exception('Approval execution failed: ${res.body}');
   }
 
-  /// GET /api/v1/finance/
-  static Future<Map<String, dynamic>> getFinance() async {
+  static Future<Map<String, dynamic>?> getMe() async {
     try {
-      final res = await http.get(Uri.parse('$apiV1Url/finance/'), headers: _buildHeaders()).timeout(_timeout);
+      final url = Uri.parse('$baseUrl/api/auth/me/');
+      final res = await http.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
-      return {};
     } catch (e) {
-      return {};
+      debugPrint('getMe error: $e');
     }
+    return null;
   }
 
-  /// GET /api/v1/statutory/
-  static Future<Map<String, dynamic>> getStatutory() async {
+  // --- Dashboard & Projects ---
+
+  static Future<Map<String, dynamic>?> getDashboard() async {
     try {
-      final res = await http.get(Uri.parse('$apiV1Url/statutory/'), headers: _buildHeaders()).timeout(_timeout);
+      final url = Uri.parse('$baseUrl/api/projects/dashboard/');
+      final res = await http.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
-      return {};
     } catch (e) {
-      return {};
+      debugPrint('getDashboard error: $e');
+    }
+    return null;
+  }
+
+  static Future<List<dynamic>> getProjects() async {
+    try {
+      final url = Uri.parse('$baseUrl/api/projects/items/');
+      final res = await http.get(url, headers: await _headers());
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data is List ? data : (data['results'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('getProjects error: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> createProject({
+    required String name,
+    required String key,
+    String description = '',
+  }) async {
+    final url = Uri.parse('$baseUrl/api/projects/items/');
+    final res = await http.post(
+      url,
+      headers: await _headers(),
+      body: jsonEncode({'name': name, 'key': key.toUpperCase(), 'description': description}),
+    );
+    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+  }
+
+  static Future<List<dynamic>> getTasks({String? projectId, String? status}) async {
+    try {
+      String path = '$baseUrl/api/projects/tasks/?';
+      if (projectId != null) path += 'project=$projectId&';
+      if (status != null) path += 'status=$status&';
+      final res = await http.get(Uri.parse(path), headers: await _headers());
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data is List ? data : (data['results'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('getTasks error: $e');
+    }
+    return [];
+  }
+
+  static Future<Map<String, dynamic>?> createTask({
+    required String projectId,
+    required String title,
+    String description = '',
+    String priority = 'medium',
+    String taskType = 'task',
+  }) async {
+    final url = Uri.parse('$baseUrl/api/projects/tasks/');
+    final res = await http.post(
+      url,
+      headers: await _headers(),
+      body: jsonEncode({
+        'project': projectId,
+        'title': title,
+        'description': description,
+        'priority': priority,
+        'task_type': taskType,
+      }),
+    );
+    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+  }
+
+  static Future<bool> updateTaskStatus(String taskId, String newStatus) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/projects/tasks/$taskId/');
+      final res = await http.patch(
+        url,
+        headers: await _headers(),
+        body: jsonEncode({'status': newStatus}),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 
-  /// GET /api/v1/integrations/
-  static Future<Map<String, dynamic>> getIntegrations() async {
+  // --- Documents & RAG ---
+
+  static Future<List<dynamic>> getDocuments() async {
     try {
-      final res = await http.get(Uri.parse('$apiV1Url/integrations/'), headers: _buildHeaders()).timeout(_timeout);
+      final url = Uri.parse('$baseUrl/api/documents/items/');
+      final res = await http.get(url, headers: await _headers());
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data is List ? data : (data['results'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('getDocuments error: $e');
+    }
+    return [];
+  }
+
+  static Future<List<dynamic>> searchKnowledge(String query) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/documents/items/search/?q=${Uri.encodeComponent(query)}');
+      final res = await http.get(url, headers: await _headers());
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['results'] ?? [];
+      }
+    } catch (e) {
+      debugPrint('searchKnowledge error: $e');
+    }
+    return [];
+  }
+
+  // --- Approvals ---
+
+  static Future<List<dynamic>> getApprovals({String? status}) async {
+    try {
+      String path = '$baseUrl/api/approvals/requests/?';
+      if (status != null) path += 'status=$status&';
+      final res = await http.get(Uri.parse(path), headers: await _headers());
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data is List ? data : (data['results'] ?? []);
+      }
+    } catch (e) {
+      debugPrint('getApprovals error: $e');
+    }
+    return [];
+  }
+
+  static Future<bool> decideApproval(String id, bool approve, {String note = ''}) async {
+    try {
+      final action = approve ? 'approve' : 'reject';
+      final url = Uri.parse('$baseUrl/api/approvals/requests/$id/$action/');
+      final res = await http.post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode({'decision_note': note}),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createApproval({
+    required String title,
+    required String description,
+    required String category,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/approvals/requests/');
+    final res = await http.post(
+      url,
+      headers: await _headers(),
+      body: jsonEncode({
+        'title': title,
+        'description': description,
+        'category': category,
+      }),
+    );
+    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+  }
+
+  // --- Centria AI Assistant ---
+
+  static Future<Map<String, dynamic>> askAI({
+    required String prompt,
+    String? conversationId,
+    String contextType = 'general',
+    String? contextId,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/ai/ask/');
+      final res = await http.post(
+        url,
+        headers: await _headers(),
+        body: jsonEncode({
+          'prompt': prompt,
+          'conversation_id': conversationId,
+          'context_type': contextType,
+          'context_id': contextId ?? '',
+        }),
+      );
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'AI query failed.'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // --- Platform Admin ---
+
+  static Future<Map<String, dynamic>?> getPlatformAdminOverview() async {
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/platform-admin/');
+      final res = await http.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
-      return {};
     } catch (e) {
-      return {};
+      debugPrint('Platform admin error: $e');
     }
-  }
-
-  /// GET /api/v1/audit/
-  static Future<List<Map<String, dynamic>>> getAudit() async {
-    try {
-      final res = await http.get(Uri.parse('$apiV1Url/audit/'), headers: _buildHeaders()).timeout(_timeout);
-      if (res.statusCode == 200) {
-        final list = jsonDecode(res.body) as List;
-        return list.map((item) => item as Map<String, dynamic>).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    return null;
   }
 }
