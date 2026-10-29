@@ -14,6 +14,13 @@ class HomepageScreen extends StatefulWidget {
 class _HomepageScreenState extends State<HomepageScreen> {
   final ScrollController _scrollController = ScrollController();
 
+  // Section GlobalKeys for exact dynamic scrolling
+  final GlobalKey _productKey = GlobalKey();
+  final GlobalKey _solutionsKey = GlobalKey();
+  final GlobalKey _integrationsKey = GlobalKey();
+  final GlobalKey _plansKey = GlobalKey();
+  final GlobalKey _resourcesKey = GlobalKey();
+
   // Interactive States
   int _previewTab = 0; // 0: Overview, 1: Issues, 2: Knowledge, 3: Approvals
   int _workflowStep = 0; // 0..3
@@ -29,35 +36,21 @@ class _HomepageScreenState extends State<HomepageScreen> {
     );
   }
 
-  void _scrollToSection(String sectionKey) {
-    double target = 600;
-    switch (sectionKey) {
-      case 'product':
-        target = 450;
-        break;
-      case 'solutions':
-        target = 1350;
-        break;
-      case 'integrations':
-        target = 2650;
-        break;
-      case 'plans':
-        target = 3450;
-        break;
-      case 'resources':
-        target = 4250;
-        break;
-      case 'features':
-        target = 750;
-        break;
-      default:
-        target = 600;
+  void _scrollToSection(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box != null && _scrollController.hasClients) {
+        final position = box.localToGlobal(Offset.zero);
+        final currentScroll = _scrollController.offset;
+        final target = (currentScroll + position.dy - 84).clamp(0.0, _scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutCubic,
+        );
+      }
     }
-    _scrollController.animateTo(
-      target,
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeInOutCubic,
-    );
   }
 
   @override
@@ -165,34 +158,25 @@ class _HomepageScreenState extends State<HomepageScreen> {
               if (!isMobile)
                 Row(
                   children: [
-                    _navLink('Product', () => _scrollToSection('product')),
-                    _navLink('Solutions', () => _scrollToSection('solutions')),
-                    _navLink('Integrations', () => _scrollToSection('integrations')),
-                    _navLink('Plans', () => _scrollToSection('plans')),
-                    _navLink('Resources', () => _scrollToSection('resources')),
+                    _navLink('Product', () => _scrollToSection(_productKey)),
+                    _navLink('Solutions', () => _scrollToSection(_solutionsKey)),
+                    _navLink('Integrations', () => _scrollToSection(_integrationsKey)),
+                    _navLink('Plans', () => _scrollToSection(_plansKey)),
+                    _navLink('Resources', () => _scrollToSection(_resourcesKey)),
                   ],
                 ),
 
-              // Actions
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: () => _openAuthModal(isSignUp: false),
-                    child: Text('Sign in', style: GoogleFonts.inter(color: AppColors.ink, fontWeight: FontWeight.w700, fontSize: 13)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _openAuthModal(isSignUp: true),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Get early access'),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.arrow_forward, size: 14),
-                      ],
-                    ),
-                  ),
-                ],
+              // Single Action Button
+              ElevatedButton(
+                onPressed: () => _openAuthModal(isSignUp: true),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Get Started'),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.arrow_forward, size: 14),
+                  ],
+                ),
               ),
             ],
           ),
@@ -306,14 +290,14 @@ class _HomepageScreenState extends State<HomepageScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Join early access'),
+                  const Text('Join Now'),
                   const SizedBox(width: 8),
                   const Icon(Icons.arrow_forward, size: 16),
                 ],
               ),
             ),
             OutlinedButton(
-              onPressed: () => _scrollToSection('features'),
+              onPressed: () => _scrollToSection(_productKey),
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.85),
                 padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
@@ -873,6 +857,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     ];
 
     return Container(
+      key: _productKey,
       color: Colors.white,
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
@@ -888,53 +873,58 @@ class _HomepageScreenState extends State<HomepageScreen> {
               Text('Stop duct-taping five disconnected tools. Centria brings clarity without the clutter.', style: GoogleFonts.inter(fontSize: 15, color: AppColors.muted)),
               const SizedBox(height: 48),
 
-              // Grid
+              // Dynamic Responsive Features Grid
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 600 ? 1 : (constraints.maxWidth < 960 ? 2 : 3);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 380,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: cols == 1 ? 1.7 : (cols == 2 ? 1.35 : 1.25),
+                      mainAxisExtent: 220,
                     ),
                     itemCount: features.length,
                     itemBuilder: (context, index) {
                       final f = features[index];
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFCFDFA),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE5EAE3)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.ink.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 380),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFCFDFA),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE5EAE3)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.ink.withValues(alpha: 0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: (f['color'] as Color).withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: (f['color'] as Color).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
+                                ),
+                                const Spacer(),
+                                Text(f['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+                                const SizedBox(height: 6),
+                                Text(f['desc'] as String, style: GoogleFonts.inter(fontSize: 12, height: 1.45, color: const Color(0xFF5D6E63))),
+                              ],
                             ),
-                            const Spacer(),
-                            Text(f['title'] as String, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
-                            const SizedBox(height: 8),
-                            Text(f['desc'] as String, style: GoogleFonts.inter(fontSize: 13, height: 1.5, color: const Color(0xFF5D6E63))),
-                          ],
+                          ),
                         ),
                       );
                     },
@@ -958,6 +948,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     ];
 
     return Container(
+      key: _solutionsKey,
       color: const Color(0xFFF0F3EE),
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
@@ -1156,51 +1147,56 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 650 ? 1 : (constraints.maxWidth < 1000 ? 2 : 3);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 380,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: cols == 1 ? 1.4 : (cols == 2 ? 1.15 : 0.88),
+                      mainAxisExtent: 320,
                     ),
                     itemCount: audiences.length,
                     itemBuilder: (context, index) {
                       final a = audiences[index];
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFCFDFB),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE4EAE2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(color: const Color(0xFFEFF3EB), borderRadius: BorderRadius.circular(6)),
-                              child: Text(a['tag'] as String, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF4D7357))),
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 380),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFCFDFB),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE4EAE2)),
                             ),
-                            const SizedBox(height: 16),
-                            Text(a['title'] as String, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
-                            const SizedBox(height: 8),
-                            Text(a['desc'] as String, style: GoogleFonts.inter(fontSize: 13, height: 1.5, color: const Color(0xFF6B7B72))),
-                            const Spacer(),
-                            ...((a['points'] as List<String>).map((p) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Icon(Icons.check, size: 14, color: AppColors.teal),
-                                      const SizedBox(width: 8),
-                                      Expanded(child: Text(p, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF53685D)))),
-                                    ],
-                                  ),
-                                ))),
-                          ],
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(color: const Color(0xFFEFF3EB), borderRadius: BorderRadius.circular(6)),
+                                  child: Text(a['tag'] as String, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF4D7357))),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(a['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+                                const SizedBox(height: 6),
+                                Text(a['desc'] as String, style: GoogleFonts.inter(fontSize: 12, height: 1.45, color: const Color(0xFF6B7B72))),
+                                const Spacer(),
+                                ...((a['points'] as List<String>).map((p) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Icon(Icons.check, size: 14, color: AppColors.teal),
+                                          const SizedBox(width: 8),
+                                          Expanded(child: Text(p, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF53685D)))),
+                                        ],
+                                      ),
+                                    ))),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -1341,6 +1337,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     ];
 
     return Container(
+      key: _integrationsKey,
       color: Colors.white,
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
@@ -1430,31 +1427,36 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 600 ? 1 : (constraints.maxWidth < 960 ? 2 : 4);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: isMobile ? 1.4 : 1.15,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 290,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      mainAxisExtent: 175,
                     ),
                     itemCount: securityCards.length,
                     itemBuilder: (context, index) {
                       final s = securityCards[index];
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(color: const Color(0xFFFBFCF9), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE0E7DD))),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.lock_outline, size: 20, color: AppColors.teal),
-                            const Spacer(),
-                            Text(s['title']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-                            const SizedBox(height: 6),
-                            Text(s['desc']!, style: GoogleFonts.inter(fontSize: 11, height: 1.5, color: const Color(0xFF6D7B72))),
-                          ],
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 340),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(color: const Color(0xFFFBFCF9), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE0E7DD))),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.lock_outline, size: 20, color: AppColors.teal),
+                                const Spacer(),
+                                Text(s['title']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                                const SizedBox(height: 6),
+                                Text(s['desc']!, style: GoogleFonts.inter(fontSize: 11, height: 1.45, color: const Color(0xFF6D7B72))),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -1484,7 +1486,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
         'price': _isYearlyBilling ? '₹1,599' : '₹1,999',
         'sub': 'per month',
         'desc': 'For teams up to 25 managing active products.',
-        'btn': 'Join early access',
+        'btn': 'Join Now',
         'featured': true,
       },
       {
@@ -1506,6 +1508,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     ];
 
     return Container(
+      key: _plansKey,
       color: Colors.white,
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
@@ -1553,65 +1556,70 @@ class _HomepageScreenState extends State<HomepageScreen> {
               // Plans Grid
               LayoutBuilder(
                 builder: (context, constraints) {
-                  int cols = constraints.maxWidth < 650 ? 1 : (constraints.maxWidth < 1050 ? 2 : 4);
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: cols == 1 ? 1.35 : (cols == 2 ? 0.95 : 0.68),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 290,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      mainAxisExtent: 380,
                     ),
                     itemCount: plans.length,
                     itemBuilder: (context, index) {
                       final p = plans[index];
                       final isFeatured = p['featured'] == true;
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: isFeatured ? const Color(0xFFF6FAF4) : const Color(0xFFFCFDFA),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: isFeatured ? const Color(0xFF6FA28C) : const Color(0xFFE1E7DF), width: isFeatured ? 1.8 : 1.0),
-                          boxShadow: isFeatured ? [BoxShadow(color: const Color(0xFF25573E).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))] : null,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isFeatured)
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(999)),
-                                child: Text('MOST POPULAR', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white)),
-                              ),
-                            Text(p['name'] as String, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 6),
-                            Text(p['desc'] as String, style: GoogleFonts.inter(fontSize: 11, height: 1.4, color: AppColors.muted)),
-                            const SizedBox(height: 18),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 340),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22),
+                            decoration: BoxDecoration(
+                              color: isFeatured ? const Color(0xFFF6FAF4) : const Color(0xFFFCFDFA),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: isFeatured ? const Color(0xFF6FA28C) : const Color(0xFFE1E7DF), width: isFeatured ? 1.8 : 1.0),
+                              boxShadow: isFeatured ? [BoxShadow(color: const Color(0xFF25573E).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))] : null,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(p['price'] as String, style: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
-                                const SizedBox(width: 4),
-                                Text(p['sub'] as String, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                                if (isFeatured)
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(999)),
+                                    child: Text('MOST POPULAR', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white)),
+                                  ),
+                                Text(p['name'] as String, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 6),
+                                Text(p['desc'] as String, style: GoogleFonts.inter(fontSize: 11, height: 1.4, color: AppColors.muted)),
+                                const SizedBox(height: 18),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(p['price'] as String, style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
+                                    const SizedBox(width: 4),
+                                    Text(p['sub'] as String, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                                  ],
+                                ),
+                                const Spacer(),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: isFeatured
+                                      ? ElevatedButton(
+                                          onPressed: () => _openAuthModal(isSignUp: true),
+                                          child: Text(p['btn'] as String),
+                                        )
+                                      : OutlinedButton(
+                                          onPressed: () => _openAuthModal(isSignUp: true),
+                                          child: Text(p['btn'] as String),
+                                        ),
+                                ),
                               ],
                             ),
-                            const Spacer(),
-                            SizedBox(
-                              width: double.infinity,
-                              child: isFeatured
-                                  ? ElevatedButton(
-                                      onPressed: () => _openAuthModal(isSignUp: true),
-                                      child: Text(p['btn'] as String),
-                                    )
-                                  : OutlinedButton(
-                                      onPressed: () => _openAuthModal(isSignUp: true),
-                                      child: Text(p['btn'] as String),
-                                    ),
-                            ),
-                          ],
+                          ),
                         ),
                       );
                     },
@@ -1636,6 +1644,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     ];
 
     return Container(
+      key: _resourcesKey,
       color: AppColors.paper,
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
@@ -1717,7 +1726,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ElevatedButton(
                         onPressed: () => _openAuthModal(isSignUp: true),
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.lime, foregroundColor: const Color(0xFF183B30)),
-                        child: const Text('Get early access today'),
+                        child: const Text('Join Now'),
                       ),
                     ],
                   ),
