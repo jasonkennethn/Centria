@@ -24,6 +24,15 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   late int _currentIndex;
   StreamSubscription? _notifSub;
+  int _unreadNotifs = 1;
+  final List<Map<String, dynamic>> _liveNotifications = [
+    {
+      'title': 'Neon DB Realtime Connected',
+      'message': 'Live synchronization active for tasks, approvals, and Gemini token streaming.',
+      'time': 'Just now',
+      'type': 'system',
+    }
+  ];
 
   @override
   void initState() {
@@ -39,6 +48,15 @@ class _AppShellState extends State<AppShell> {
         final data = event['data'] as Map<String, dynamic>? ?? {};
         final title = data['title'] ?? 'Workspace Notification';
         final msg = data['message'] ?? '';
+        setState(() {
+          _unreadNotifs++;
+          _liveNotifications.insert(0, {
+            'title': title,
+            'message': msg,
+            'time': 'Just now',
+            'type': data['resource_type'] ?? 'alert',
+          });
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             behavior: SnackBarBehavior.floating,
@@ -66,6 +84,91 @@ class _AppShellState extends State<AppShell> {
         );
       }
     });
+  }
+
+  void _openNotificationsSheet() {
+    setState(() => _unreadNotifs = 0);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: Colors.white,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.notifications_active_outlined, color: AppColors.ink, size: 22),
+                      const SizedBox(width: 10),
+                      Text('Live Notifications', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    ],
+                  ),
+                  if (_liveNotifications.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _liveNotifications.clear());
+                        setSheetState(() {});
+                      },
+                      child: Text('Clear All', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                    ),
+                ],
+              ),
+              const Divider(height: 24, color: AppColors.line),
+              if (_liveNotifications.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Icon(Icons.notifications_none, size: 40, color: AppColors.muted),
+                        const SizedBox(height: 12),
+                        Text('No new notifications', style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _liveNotifications.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.line),
+                    itemBuilder: (ctx, i) {
+                      final n = _liveNotifications[i];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                        leading: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: n['type'] == 'task' ? const Color(0xFFE8F5E9) : const Color(0xFFEDE7F6),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            n['type'] == 'task' ? Icons.task_alt : Icons.bolt,
+                            color: n['type'] == 'task' ? AppColors.teal : AppColors.violet,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(n['title'] ?? '', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                        subtitle: Text(n['message'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                        trailing: Text(n['time'] ?? '', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -111,6 +214,14 @@ class _AppShellState extends State<AppShell> {
           ? AppBar(
               title: Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
               actions: [
+                IconButton(
+                  icon: Badge(
+                    isLabelVisible: _unreadNotifs > 0,
+                    label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
+                    child: const Icon(Icons.notifications_outlined),
+                  ),
+                  onPressed: _openNotificationsSheet,
+                ),
                 IconButton(
                   icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
                   onPressed: _openAiAssistant,
@@ -203,7 +314,17 @@ class _AppShellState extends State<AppShell> {
                 icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),
                 label: Text('Centria Assistant', style: GoogleFonts.inter(color: AppColors.violet, fontWeight: FontWeight.w700)),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Badge(
+                  isLabelVisible: _unreadNotifs > 0,
+                  label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
+                  child: const Icon(Icons.notifications_none_outlined, color: AppColors.ink, size: 22),
+                ),
+                tooltip: 'Notifications',
+                onPressed: _openNotificationsSheet,
+              ),
+              const SizedBox(width: 10),
               // User Avatar
               Container(
                 width: 34,

@@ -207,5 +207,5 @@ CHANNEL_LAYERS = {
 }
 
 # Neon Realtime DB configuration
-NEON_REALTIME_URL = os.environ.get('NEON_REALTIME_URL', 'https://ep-aged-sea-b3c9bxpy.rt.c-4.ap-southeast-1.aws.neon.tech/')
-NEON_REALTIME_TOKEN = os.environ.get('NEON_REALTIME_TOKEN', 'nrt_live_1BXGOiUkzm9RjM2vnB38Ulwnfmgtpasg4RmLTdTm9GqE')
+NEON_REALTIME_URL = os.environ.get('NEON_REALTIME_URL', '')
+NEON_REALTIME_TOKEN = os.environ.get('NEON_REALTIME_TOKEN', '')
