@@ -208,49 +208,48 @@ class _AppShellState extends State<AppShell> {
       if (isSuper) const PlatformAdminScreen(),
     ];
 
-    return SelectionArea(
-      child: Scaffold(
-        backgroundColor: AppColors.paper,
-        appBar: isMobile
-            ? AppBar(
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(
-                        'assets/images/logo.png',
+    return Scaffold(
+      backgroundColor: AppColors.paper,
+      appBar: isMobile
+          ? AppBar(
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 22,
+                      height: 22,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
                         width: 22,
                         height: 22,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
-                          child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
-                        ),
+                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
+                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              actions: [
-                IconButton(
-                  icon: Badge(
-                    isLabelVisible: _unreadNotifs > 0,
-                    label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
-                    child: const Icon(Icons.notifications_outlined),
                   ),
-                  onPressed: _openNotificationsSheet,
+                  const SizedBox(width: 8),
+                  Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            actions: [
+              IconButton(
+                icon: Badge(
+                  isLabelVisible: _unreadNotifs > 0,
+                  label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
+                  child: const Icon(Icons.notifications_outlined),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
-                  onPressed: _openAiAssistant,
-                ),
-              ],
-            )
-          : null,
+                onPressed: _openNotificationsSheet,
+              ),
+              IconButton(
+                icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
+                onPressed: _openAiAssistant,
+              ),
+            ],
+          )
+        : null,
       drawer: isMobile ? Drawer(child: _buildSidebar(auth, isSuper)) : null,
       body: Row(
         children: [
@@ -269,13 +268,12 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAiAssistant,
-          backgroundColor: AppColors.violet,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.auto_awesome, size: 18),
-          label: Text('Ask AI', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
-        ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openAiAssistant,
+        backgroundColor: AppColors.violet,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.auto_awesome, size: 18),
+        label: Text('Ask AI', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
       ),
     );
   }

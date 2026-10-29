@@ -64,38 +64,36 @@ class _HomepageScreenState extends State<HomepageScreen> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 860;
 
-    return SelectionArea(
-      child: Scaffold(
-        backgroundColor: AppColors.paper,
-        body: Column(
-          children: [
-            // 1. Locked Navigation Bar (Sticky at top)
-            _buildHeader(isMobile),
+    return Scaffold(
+      backgroundColor: AppColors.paper,
+      body: Column(
+        children: [
+          // 1. Locked Navigation Bar (Sticky at top)
+          _buildHeader(isMobile),
 
-            // 2. Scrollable Body Content
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
-                  children: [
-                    _buildHero(isMobile, width),
-                    _buildTrustStrip(isMobile),
-                    _buildFeatures(isMobile),
-                    _buildWorkflowSection(isMobile),
-                    _buildAudienceSection(isMobile),
-                    _buildAiSection(isMobile),
-                    _buildIntegrationsSection(isMobile),
-                    _buildSecuritySection(isMobile),
-                    _buildPricingSection(isMobile),
-                    _buildFaqSection(isMobile),
-                    _buildCtaBanner(isMobile),
-                    _buildFooter(isMobile),
-                  ],
-                ),
+          // 2. Scrollable Body Content
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                children: [
+                  _buildHero(isMobile, width),
+                  _buildTrustStrip(isMobile),
+                  _buildFeatures(isMobile),
+                  _buildWorkflowSection(isMobile),
+                  _buildAudienceSection(isMobile),
+                  _buildAiSection(isMobile),
+                  _buildIntegrationsSection(isMobile),
+                  _buildSecuritySection(isMobile),
+                  _buildPricingSection(isMobile),
+                  _buildFaqSection(isMobile),
+                  _buildCtaBanner(isMobile),
+                  _buildFooter(isMobile),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
