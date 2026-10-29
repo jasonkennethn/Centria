@@ -91,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 20),
             // Centria Name
             Text(
-              'centria',
+              'Centria',
               style: GoogleFonts.inter(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,

@@ -26,7 +26,7 @@ class CentriaApp extends StatelessWidget {
         : (AuthState().isAuthenticated ? '/dashboard' : '/');
 
     return MaterialApp(
-      title: 'Centria — Company work, connected',
+      title: 'Centria — AI-Powered Company Operating System',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: startRoute,

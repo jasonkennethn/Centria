@@ -130,6 +130,10 @@ CORS_ALLOWED_ORIGINS = [
     FRONTEND_URL,
     'http://localhost:8080',
     'http://localhost:3000',
+    'http://localhost:9845',
+    'http://127.0.0.1:9845',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
 ]
 CORS_ALLOW_CREDENTIALS = True
 

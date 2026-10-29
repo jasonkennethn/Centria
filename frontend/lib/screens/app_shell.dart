@@ -208,32 +208,33 @@ class _AppShellState extends State<AppShell> {
       if (isSuper) const PlatformAdminScreen(),
     ];
 
-    return Scaffold(
-      backgroundColor: AppColors.paper,
-      appBar: isMobile
-          ? AppBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 22,
-                      height: 22,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
+    return SelectionArea(
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        appBar: isMobile
+            ? AppBar(
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        'assets/images/logo.png',
                         width: 22,
                         height: 22,
-                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
-                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
+                          child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
-                ],
-              ),
+                    const SizedBox(width: 8),
+                    Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
+                  ],
+                ),
               actions: [
                 IconButton(
                   icon: Badge(
@@ -268,12 +269,13 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAiAssistant,
-        backgroundColor: AppColors.violet,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.auto_awesome, size: 18),
-        label: Text('Ask AI', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _openAiAssistant,
+          backgroundColor: AppColors.violet,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.auto_awesome, size: 18),
+          label: Text('Ask AI', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+        ),
       ),
     );
   }
@@ -410,7 +412,7 @@ class _AppShellState extends State<AppShell> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text('centria', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: AppColors.ink)),
+              Text('Centria', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: AppColors.ink)),
             ],
           ),
           const SizedBox(height: 20),

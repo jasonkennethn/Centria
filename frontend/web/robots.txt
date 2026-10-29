@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://centria-enterprise.vercel.app/sitemap.xml

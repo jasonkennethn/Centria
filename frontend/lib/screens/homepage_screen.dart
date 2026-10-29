@@ -64,36 +64,38 @@ class _HomepageScreenState extends State<HomepageScreen> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 860;
 
-    return Scaffold(
-      backgroundColor: AppColors.paper,
-      body: Column(
-        children: [
-          // 1. Locked Navigation Bar (Sticky at top)
-          _buildHeader(isMobile),
+    return SelectionArea(
+      child: Scaffold(
+        backgroundColor: AppColors.paper,
+        body: Column(
+          children: [
+            // 1. Locked Navigation Bar (Sticky at top)
+            _buildHeader(isMobile),
 
-          // 2. Scrollable Body Content
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  _buildHero(isMobile, width),
-                  _buildTrustStrip(isMobile),
-                  _buildFeatures(isMobile),
-                  _buildWorkflowSection(isMobile),
-                  _buildAudienceSection(isMobile),
-                  _buildAiSection(isMobile),
-                  _buildIntegrationsSection(isMobile),
-                  _buildSecuritySection(isMobile),
-                  _buildPricingSection(isMobile),
-                  _buildFaqSection(isMobile),
-                  _buildCtaBanner(isMobile),
-                  _buildFooter(isMobile),
-                ],
+            // 2. Scrollable Body Content
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    _buildHero(isMobile, width),
+                    _buildTrustStrip(isMobile),
+                    _buildFeatures(isMobile),
+                    _buildWorkflowSection(isMobile),
+                    _buildAudienceSection(isMobile),
+                    _buildAiSection(isMobile),
+                    _buildIntegrationsSection(isMobile),
+                    _buildSecuritySection(isMobile),
+                    _buildPricingSection(isMobile),
+                    _buildFaqSection(isMobile),
+                    _buildCtaBanner(isMobile),
+                    _buildFooter(isMobile),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -148,7 +150,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'centria',
+                    'Centria',
                     style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -1.2, color: AppColors.ink),
                   ),
                 ],
@@ -386,7 +388,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ],
                     ),
                     const SizedBox(width: 10),
-                    Text('centria', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                    Text('Centria', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     const SizedBox(width: 8),
                     Container(width: 1, height: 16, color: const Color(0xFFE2E7E1)),
                     const SizedBox(width: 8),
@@ -1431,10 +1433,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 290,
+                      maxCrossAxisExtent: 340,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,
-                      mainAxisExtent: 175,
+                      mainAxisExtent: 220,
                     ),
                     itemCount: securityCards.length,
                     itemBuilder: (context, index) {
@@ -1560,7 +1562,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 290,
+                      maxCrossAxisExtent: 340,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
                       mainAxisExtent: 380,
@@ -1595,12 +1597,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 const SizedBox(height: 6),
                                 Text(p['desc'] as String, style: GoogleFonts.inter(fontSize: 11, height: 1.4, color: AppColors.muted)),
                                 const SizedBox(height: 18),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
+                                Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 6,
+                                  runSpacing: 4,
                                   children: [
-                                    Text(p['price'] as String, style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
-                                    const SizedBox(width: 4),
+                                    Text(p['price'] as String, style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
                                     Text(p['sub'] as String, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                                   ],
                                 ),
@@ -1749,10 +1751,14 @@ class _HomepageScreenState extends State<HomepageScreen> {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 16,
+                runSpacing: 12,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
@@ -1770,21 +1776,25 @@ class _HomepageScreenState extends State<HomepageScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                      Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ],
                   ),
                   Text('Company work, connected.', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
                 ],
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 16,
+                runSpacing: 12,
                 children: [
                   Text('© 2026 Centria Platform. All rights reserved.', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                  Row(
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
                     children: [
                       Text('Privacy Policy', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                      const SizedBox(width: 16),
                       Text('Terms of Service', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                     ],
                   ),
@@ -1948,7 +1958,7 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                      Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ],
                   ),
                   IconButton(

@@ -7,8 +7,29 @@ class ApiService {
   static const String _renderUrl = 'https://centria-enterprise.onrender.com';
   static const String _localUrl = 'http://127.0.0.1:8000';
 
-  // In development, default to local if accessible, else Render
-  static String baseUrl = kReleaseMode ? _renderUrl : _localUrl;
+  static String? _customBaseUrl;
+  static set baseUrl(String url) => _customBaseUrl = url;
+
+  // Dynamic Base URL: on web, if accessed from localhost or 127.0.0.1, use local backend
+  static String get baseUrl {
+    if (_customBaseUrl != null) return _customBaseUrl!;
+    if (kIsWeb) {
+      final host = Uri.base.host;
+      if (host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0' || host.isEmpty) {
+        return _localUrl;
+      }
+    }
+    return kReleaseMode ? _renderUrl : _localUrl;
+  }
+
+  static dynamic _parseJson(http.Response res) {
+    if (res.body.isEmpty) return null;
+    try {
+      return jsonDecode(res.body);
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -45,21 +66,30 @@ class ApiService {
   // --- Auth APIs ---
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
-    final url = Uri.parse('$baseUrl/api/auth/login/');
-    final res = await http.post(
-      url,
-      headers: await _headers(needsAuth: false),
-      body: jsonEncode({'email': email.trim(), 'password': password}),
-    );
-    final data = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      await saveTokens(access: data['access'], refresh: data['refresh']);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', jsonEncode(data['user']));
-      return {'success': true, 'data': data};
-    } else {
-      final err = data['detail'] ?? data['error'] ?? 'Sign in failed. Check your credentials.';
-      return {'success': false, 'error': err.toString()};
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/login/');
+      final res = await http.post(
+        url,
+        headers: await _headers(needsAuth: false),
+        body: jsonEncode({'email': email.trim(), 'password': password}),
+      );
+      final data = _parseJson(res);
+      if (res.statusCode == 200 && data is Map<String, dynamic>) {
+        await saveTokens(access: data['access'], refresh: data['refresh']);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_data', jsonEncode(data['user']));
+        return {'success': true, 'data': data};
+      } else {
+        final err = (data is Map)
+            ? (data['detail'] ?? data['error'] ?? 'Sign in failed. Check your credentials.')
+            : 'Server returned code ${res.statusCode}. Please verify backend is running.';
+        return {'success': false, 'error': err.toString()};
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Connection error. Ensure the Centria backend server is running on $baseUrl',
+      };
     }
   }
 
@@ -69,37 +99,51 @@ class ApiService {
     required String email,
     required String password,
   }) async {
-    final url = Uri.parse('$baseUrl/api/auth/register/');
-    final res = await http.post(
-      url,
-      headers: await _headers(needsAuth: false),
-      body: jsonEncode({
-        'company_name': companyName.trim(),
-        'full_name': fullName.trim(),
-        'email': email.trim(),
-        'password': password,
-      }),
-    );
-    final data = jsonDecode(res.body);
-    if (res.statusCode == 201) {
-      await saveTokens(access: data['access'], refresh: data['refresh']);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_data', jsonEncode(data['user']));
-      return {'success': true, 'data': data};
-    } else {
-      final err = data['email'] ?? data['error'] ?? data['detail'] ?? 'Registration failed.';
-      return {'success': false, 'error': err is List ? err.first : err.toString()};
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/register/');
+      final res = await http.post(
+        url,
+        headers: await _headers(needsAuth: false),
+        body: jsonEncode({
+          'company_name': companyName.trim(),
+          'full_name': fullName.trim(),
+          'email': email.trim(),
+          'password': password,
+        }),
+      );
+      final data = _parseJson(res);
+      if (res.statusCode == 201 && data is Map<String, dynamic>) {
+        await saveTokens(access: data['access'], refresh: data['refresh']);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_data', jsonEncode(data['user']));
+        return {'success': true, 'data': data};
+      } else {
+        final err = (data is Map)
+            ? (data['email'] ?? data['error'] ?? data['detail'] ?? 'Registration failed.')
+            : 'Server returned code ${res.statusCode}.';
+        return {'success': false, 'error': err is List ? err.first : err.toString()};
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Connection error. Ensure backend is running on $baseUrl',
+      };
     }
   }
 
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
-    final url = Uri.parse('$baseUrl/api/auth/forgot-password/');
-    final res = await http.post(
-      url,
-      headers: await _headers(needsAuth: false),
-      body: jsonEncode({'email': email.trim()}),
-    );
-    return {'success': res.statusCode == 200, 'data': jsonDecode(res.body)};
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/forgot-password/');
+      final res = await http.post(
+        url,
+        headers: await _headers(needsAuth: false),
+        body: jsonEncode({'email': email.trim()}),
+      );
+      final data = _parseJson(res);
+      return {'success': res.statusCode == 200, 'data': data};
+    } catch (e) {
+      return {'success': false, 'error': 'Connection error: $e'};
+    }
   }
 
   static Future<Map<String, dynamic>> resetPassword({
@@ -107,21 +151,26 @@ class ApiService {
     required String otpCode,
     required String newPassword,
   }) async {
-    final url = Uri.parse('$baseUrl/api/auth/reset-password/');
-    final res = await http.post(
-      url,
-      headers: await _headers(needsAuth: false),
-      body: jsonEncode({
-        'email': email.trim(),
-        'otp_code': otpCode.trim(),
-        'new_password': newPassword,
-      }),
-    );
-    final data = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      return {'success': true, 'message': data['message']};
-    } else {
-      return {'success': false, 'error': data['error'] ?? 'Failed to reset password.'};
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/reset-password/');
+      final res = await http.post(
+        url,
+        headers: await _headers(needsAuth: false),
+        body: jsonEncode({
+          'email': email.trim(),
+          'otp_code': otpCode.trim(),
+          'new_password': newPassword,
+        }),
+      );
+      final data = _parseJson(res);
+      if (res.statusCode == 200) {
+        return {'success': true, 'data': data};
+      } else {
+        final err = (data is Map) ? (data['error'] ?? data['detail'] ?? 'Reset failed.') : 'Reset failed.';
+        return {'success': false, 'error': err.toString()};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Connection error: $e'};
     }
   }
 
