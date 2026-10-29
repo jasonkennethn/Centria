@@ -16,6 +16,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -23,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
+    'channels',
     'rest_framework',
     'corsheaders',
     'django_q',
@@ -69,6 +71,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'centria_backend.wsgi.application'
+ASGI_APPLICATION = 'centria_backend.asgi.application'
 
 # Database — NeonDB
 DATABASES = {
@@ -195,3 +198,14 @@ Q_CLUSTER = {
 # OTP settings
 OTP_EXPIRY_MINUTES = 10
 OTP_LENGTH = 6
+
+# Realtime / WebSockets (Django Channels)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+# Neon Realtime DB configuration
+NEON_REALTIME_URL = os.environ.get('NEON_REALTIME_URL', 'https://ep-aged-sea-b3c9bxpy.rt.c-4.ap-southeast-1.aws.neon.tech/')
+NEON_REALTIME_TOKEN = os.environ.get('NEON_REALTIME_TOKEN', 'nrt_live_1BXGOiUkzm9RjM2vnB38Ulwnfmgtpasg4RmLTdTm9GqE')

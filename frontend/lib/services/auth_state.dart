@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:centria/services/api_service.dart';
+import 'package:centria/services/realtime_service.dart';
 
 class AuthState extends ChangeNotifier {
   static final AuthState _instance = AuthState._internal();
@@ -22,6 +23,7 @@ class AuthState extends ChangeNotifier {
 
   String get companyName => _user?['company_details']?['name'] ?? _user?['company']?['name'] ?? 'My Workspace';
   String get companySlug => _user?['company_details']?['slug'] ?? _user?['company']?['slug'] ?? 'workspace';
+  String? get companyId => _user?['company_details']?['id']?.toString() ?? _user?['company']?.toString();
   String get roleName => _user?['role_details']?['name'] ?? _user?['role']?['name'] ?? 'Member';
 
   Future<void> init() async {
@@ -40,6 +42,7 @@ class AuthState extends ChangeNotifier {
         _user = me;
         await prefs.setString('user_data', jsonEncode(me));
       }
+      RealtimeService.instance.connect();
     }
     _initialized = true;
     notifyListeners();
@@ -49,6 +52,7 @@ class AuthState extends ChangeNotifier {
     final res = await ApiService.login(email, password);
     if (res['success']) {
       _user = res['data']['user'];
+      RealtimeService.instance.connect();
       notifyListeners();
     }
     return res;
@@ -68,12 +72,14 @@ class AuthState extends ChangeNotifier {
     );
     if (res['success']) {
       _user = res['data']['user'];
+      RealtimeService.instance.connect();
       notifyListeners();
     }
     return res;
   }
 
   Future<void> logout() async {
+    RealtimeService.instance.disconnect();
     await ApiService.clearTokens();
     _user = null;
     notifyListeners();

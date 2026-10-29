@@ -10,6 +10,9 @@ import 'package:centria/screens/approvals_screen.dart';
 import 'package:centria/screens/platform_admin_screen.dart';
 import 'package:centria/widgets/ai_assistant_sheet.dart';
 
+import 'dart:async';
+import 'package:centria/services/realtime_service.dart';
+
 class AppShell extends StatefulWidget {
   final int initialIndex;
   const AppShell({super.key, this.initialIndex = 0});
@@ -20,11 +23,55 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   late int _currentIndex;
+  StreamSubscription? _notifSub;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    RealtimeService.instance.connect();
+    _subscribeNotifications();
+  }
+
+  void _subscribeNotifications() {
+    _notifSub = RealtimeService.instance.notificationsStream.listen((event) {
+      if (mounted) {
+        final data = event['data'] as Map<String, dynamic>? ?? {};
+        final title = data['title'] ?? 'Workspace Notification';
+        final msg = data['message'] ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.ink,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            content: Row(
+              children: [
+                const Icon(Icons.notifications_active, color: AppColors.lime, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
+                      if (msg.isNotEmpty)
+                        Text(msg, style: GoogleFonts.inter(color: AppColors.muted, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifSub?.cancel();
+    super.dispose();
   }
 
   void _openAiAssistant() {
@@ -117,6 +164,40 @@ class _AppShellState extends State<AppShell> {
           ),
           Row(
             children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: RealtimeService.instance.isConnected,
+                builder: (ctx, connected, _) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFE0E0E0)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: connected ? const Color(0xFF2E7D32) : const Color(0xFF9E9E9E),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        connected ? 'Neon DB Live' : 'Offline',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: connected ? const Color(0xFF2E7D32) : const Color(0xFF757575),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: _openAiAssistant,
                 icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),

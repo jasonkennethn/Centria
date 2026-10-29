@@ -4,6 +4,9 @@ import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/widgets/skeleton_loader.dart';
 
+import 'dart:async';
+import 'package:centria/services/realtime_service.dart';
+
 class ApprovalsScreen extends StatefulWidget {
   const ApprovalsScreen({super.key});
 
@@ -15,15 +18,43 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
   List<dynamic> _approvals = [];
   bool _isLoading = true;
   String _filter = 'all';
+  StreamSubscription? _approvalsSub;
 
   @override
   void initState() {
     super.initState();
     _loadApprovals();
+    _subscribeRealtime();
   }
 
-  Future<void> _loadApprovals() async {
-    setState(() => _isLoading = true);
+  void _subscribeRealtime() {
+    _approvalsSub = RealtimeService.instance.approvalsStream.listen((event) {
+      final eventName = event['event'];
+      final data = event['data'] as Map<String, dynamic>? ?? {};
+      if (eventName == 'approval_updated') {
+        final id = data['id'];
+        final idx = _approvals.indexWhere((a) => a['id'] == id);
+        if (idx != -1 && mounted) {
+          setState(() {
+            _approvals[idx] = {..._approvals[idx], ...data};
+          });
+        } else {
+          _loadApprovals(showLoading: false);
+        }
+      } else if (eventName == 'approval_created') {
+        _loadApprovals(showLoading: false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _approvalsSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadApprovals({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isLoading = true);
     final list = await ApiService.getApprovals(status: _filter == 'all' ? null : _filter);
     if (mounted) {
       setState(() {
@@ -54,9 +85,11 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
           ElevatedButton(
             onPressed: () async {
               final ok = await ApiService.decideApproval(id, approve, note: noteCtrl.text.trim());
-              if (mounted) {
+              if (ctx.mounted) {
                 Navigator.pop(ctx);
-                if (ok) _loadApprovals();
+              }
+              if (mounted && ok) {
+                _loadApprovals();
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: approve ? AppColors.teal : AppColors.error),
@@ -82,7 +115,41 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Approvals', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+                    Row(
+                      children: [
+                        Text('Approvals', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+                        const SizedBox(width: 12),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: RealtimeService.instance.isConnected,
+                          builder: (ctx, connected, _) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  connected ? 'Live Synced' : 'Connecting...',
+                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 4),
                     Text('Release gates, scope modifications, and operational sign-offs.', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                   ],

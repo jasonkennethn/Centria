@@ -6,6 +6,9 @@ import 'package:centria/services/api_service.dart';
 import 'package:centria/widgets/skeleton_loader.dart';
 import 'package:centria/widgets/ai_assistant_sheet.dart';
 
+import 'dart:async';
+import 'package:centria/services/realtime_service.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -16,15 +19,56 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _dashboardData;
   bool _isLoading = true;
+  StreamSubscription? _dashboardSub;
+  StreamSubscription? _approvalsSub;
+  StreamSubscription? _tasksSub;
 
   @override
   void initState() {
     super.initState();
     _fetchDashboard();
+    _subscribeRealtime();
   }
 
-  Future<void> _fetchDashboard() async {
-    setState(() => _isLoading = true);
+  void _subscribeRealtime() {
+    _dashboardSub = RealtimeService.instance.dashboardStream.listen((event) {
+      if (mounted && _dashboardData != null) {
+        setState(() {
+          final recent = List<Map<String, dynamic>>.from(_dashboardData!['recent_activity'] ?? []);
+          recent.insert(0, Map<String, dynamic>.from(event['data'] ?? {}));
+          if (recent.length > 8) recent.removeLast();
+          _dashboardData!['recent_activity'] = recent;
+        });
+      }
+    });
+
+    _approvalsSub = RealtimeService.instance.approvalsStream.listen((event) {
+      if (mounted && _dashboardData != null && event['data']?['pending_count'] != null) {
+        setState(() {
+          final metrics = Map<String, dynamic>.from(_dashboardData!['metrics'] ?? {});
+          metrics['pending_approvals'] = event['data']['pending_count'];
+          _dashboardData!['metrics'] = metrics;
+        });
+      }
+    });
+
+    _tasksSub = RealtimeService.instance.tasksStream.listen((_) {
+      if (mounted) {
+        _fetchDashboard(showLoading: false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dashboardSub?.cancel();
+    _approvalsSub?.cancel();
+    _tasksSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchDashboard({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isLoading = true);
     final data = await ApiService.getDashboard();
     if (mounted) {
       setState(() {
@@ -61,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                value: priority,
+                initialValue: priority,
                 decoration: const InputDecoration(labelText: 'Priority'),
                 items: const [
                   DropdownMenuItem(value: 'low', child: Text('Low')),
@@ -84,8 +128,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 if (projects.isNotEmpty) {
                   final pId = projects.first['id'];
                   await ApiService.createTask(projectId: pId, title: text, priority: priority);
-                  if (mounted) {
+                  if (ctx.mounted) {
                     Navigator.pop(ctx);
+                  }
+                  if (mounted) {
                     _fetchDashboard();
                   }
                 }
@@ -125,9 +171,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Good morning, $userName',
-                        style: GoogleFonts.inter(fontSize: isMobile ? 22 : 28, fontWeight: FontWeight.w700, letterSpacing: -0.8),
+                      Row(
+                        children: [
+                          Text(
+                            'Good morning, $userName',
+                            style: GoogleFonts.inter(fontSize: isMobile ? 22 : 28, fontWeight: FontWeight.w700, letterSpacing: -0.8),
+                          ),
+                          const SizedBox(width: 12),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: RealtimeService.instance.isConnected,
+                            builder: (ctx, connected, _) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    connected ? 'Live Synced' : 'Connecting...',
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text("Here's what needs your attention today in Centria.", style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),

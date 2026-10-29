@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/api_service.dart';
+import 'package:centria/services/realtime_service.dart';
 
 class AiAssistantSheet extends StatefulWidget {
   final String contextType;
@@ -37,38 +38,73 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
     _promptController.clear();
     setState(() {
       _messages.add({'sender': 'user', 'content': text, 'citations': []});
+      // Add empty assistant response to stream into
+      _messages.add({'sender': 'assistant', 'content': '', 'citations': []});
       _isLoading = true;
     });
 
     _scrollToBottom();
 
-    final res = await ApiService.askAI(
-      prompt: text,
-      conversationId: _conversationId,
-      contextType: widget.contextType,
-      contextId: widget.contextId,
-    );
+    try {
+      final stream = RealtimeService.instance.streamAiAssistant(
+        prompt: text,
+        contextType: widget.contextType,
+        contextId: widget.contextId,
+        conversationId: _conversationId,
+        onComplete: (metadata) {
+          if (mounted) {
+            setState(() {
+              _conversationId = metadata['conversation_id'];
+              _messages.last['citations'] = metadata['citations'] ?? [];
+              _isLoading = false;
+            });
+            _scrollToBottom();
+          }
+        },
+      );
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (res['success']) {
-          final data = res['data'];
-          _conversationId = data['conversation_id'];
-          _messages.add({
-            'sender': 'assistant',
-            'content': data['response'],
-            'citations': data['citations'] ?? [],
-          });
-        } else {
-          _messages.add({
-            'sender': 'assistant',
-            'content': "Error: ${res['error'] ?? 'Could not complete AI request'}",
-            'citations': [],
-          });
-        }
-      });
-      _scrollToBottom();
+      stream.listen(
+        (chunk) {
+          if (mounted) {
+            setState(() {
+              _messages.last['content'] = (_messages.last['content'] as String) + chunk;
+            });
+            _scrollToBottom();
+          }
+        },
+        onError: (err) async {
+          debugPrint('[AI Assistant] Stream error: $err, trying HTTP fallback...');
+          // Graceful fallback to HTTP if WebSocket stream fails
+          final res = await ApiService.askAI(
+            prompt: text,
+            conversationId: _conversationId,
+            contextType: widget.contextType,
+            contextId: widget.contextId,
+          );
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              if (res['success']) {
+                final data = res['data'];
+                _conversationId = data['conversation_id'];
+                _messages.last['content'] = data['response'];
+                _messages.last['citations'] = data['citations'] ?? [];
+              } else {
+                _messages.last['content'] = "Error: ${res['error'] ?? 'Could not complete AI request'}";
+              }
+            });
+            _scrollToBottom();
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('[AI Assistant] Exception: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _messages.last['content'] = "Error establishing real-time connection. Please retry.";
+        });
+      }
     }
   }
 

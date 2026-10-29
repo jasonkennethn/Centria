@@ -8,6 +8,7 @@ from core.views import (
     MeView,
     TeamListView,
     PlatformAdminOverviewView,
+    RealtimeConfigView,
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('me/', MeView.as_view(), name='me'),
     path('team/', TeamListView.as_view(), name='team_list'),
     path('platform-admin/', PlatformAdminOverviewView.as_view(), name='platform_admin_overview'),
+    path('realtime/config/', RealtimeConfigView.as_view(), name='realtime_config'),
 ]

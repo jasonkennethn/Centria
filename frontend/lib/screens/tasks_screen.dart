@@ -4,6 +4,9 @@ import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/widgets/skeleton_loader.dart';
 
+import 'dart:async';
+import 'package:centria/services/realtime_service.dart';
+
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
@@ -14,6 +17,7 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   List<dynamic> _tasks = [];
   bool _isLoading = true;
+  StreamSubscription? _tasksSub;
 
   final List<Map<String, String>> _columns = [
     {'key': 'todo', 'label': 'To Do'},
@@ -26,10 +30,37 @@ class _TasksScreenState extends State<TasksScreen> {
   void initState() {
     super.initState();
     _loadTasks();
+    _subscribeRealtime();
   }
 
-  Future<void> _loadTasks() async {
-    setState(() => _isLoading = true);
+  void _subscribeRealtime() {
+    _tasksSub = RealtimeService.instance.tasksStream.listen((event) {
+      final eventName = event['event'];
+      final data = event['data'] as Map<String, dynamic>? ?? {};
+      if (eventName == 'task_updated') {
+        final taskId = data['id'];
+        final idx = _tasks.indexWhere((t) => t['id'] == taskId);
+        if (idx != -1 && mounted) {
+          setState(() {
+            _tasks[idx] = {..._tasks[idx], ...data};
+          });
+        } else {
+          _loadTasks(showLoading: false);
+        }
+      } else if (eventName == 'task_created' || eventName == 'task_comment_created') {
+        _loadTasks(showLoading: false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tasksSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadTasks({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isLoading = true);
     final tasks = await ApiService.getTasks();
     if (mounted) {
       setState(() {
@@ -40,8 +71,17 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Future<void> _moveTask(String taskId, String newStatus) async {
+    // Optimistic UI update
+    final idx = _tasks.indexWhere((t) => t['id'] == taskId);
+    if (idx != -1) {
+      setState(() {
+        _tasks[idx] = {..._tasks[idx], 'status': newStatus};
+      });
+    }
     final ok = await ApiService.updateTaskStatus(taskId, newStatus);
-    if (ok) _loadTasks();
+    if (!ok && mounted) {
+      _loadTasks(showLoading: false);
+    }
   }
 
   void _openCreateTaskDialog() {
@@ -60,7 +100,7 @@ class _TasksScreenState extends State<TasksScreen> {
               TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Task Title', hintText: 'Implement responsive navbar')),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
-                value: priority,
+                initialValue: priority,
                 decoration: const InputDecoration(labelText: 'Priority'),
                 items: const [
                   DropdownMenuItem(value: 'low', child: Text('Low')),
@@ -80,8 +120,10 @@ class _TasksScreenState extends State<TasksScreen> {
                 final projects = await ApiService.getProjects();
                 if (projects.isNotEmpty) {
                   await ApiService.createTask(projectId: projects.first['id'], title: titleCtrl.text.trim(), priority: priority);
-                  if (mounted) {
+                  if (ctx.mounted) {
                     Navigator.pop(ctx);
+                  }
+                  if (mounted) {
                     _loadTasks();
                   }
                 }
@@ -112,7 +154,41 @@ class _TasksScreenState extends State<TasksScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Tasks & Issues', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+                    Row(
+                      children: [
+                        Text('Tasks & Issues', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+                        const SizedBox(width: 12),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: RealtimeService.instance.isConnected,
+                          builder: (ctx, connected, _) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  connected ? 'Live Synced' : 'Connecting...',
+                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 4),
                     Text('Kanban execution board across active projects.', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
                   ],

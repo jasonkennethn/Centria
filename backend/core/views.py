@@ -298,3 +298,16 @@ class PlatformAdminOverviewView(views.APIView):
             'total_users': users_count,
             'recent_companies': recent_companies,
         })
+
+
+class RealtimeConfigView(views.APIView):
+    """Exposes real-time connectivity endpoints and Neon Realtime credentials for authenticated clients."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from core.realtime import get_neon_realtime_config
+        config = get_neon_realtime_config()
+        config['company_id'] = str(request.company.id) if request.company else None
+        config['ws_workspace_url'] = f"/ws/workspace/{request.company.id}/" if request.company else None
+        config['ws_ai_stream_url'] = "/ws/ai/stream/"
+        return Response(config)

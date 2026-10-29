@@ -358,4 +358,26 @@ class ApiService {
     }
     return null;
   }
+
+  static String get wsBaseUrl {
+    final uri = Uri.parse(baseUrl);
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    final portStr = uri.hasPort ? ':${uri.port}' : '';
+    return '$scheme://${uri.host}$portStr';
+  }
+
+  // --- Realtime Configuration ---
+
+  static Future<Map<String, dynamic>?> getRealtimeConfig() async {
+    try {
+      final url = Uri.parse('$baseUrl/api/auth/realtime/config/');
+      final res = await http.get(url, headers: await _headers());
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (e) {
+      debugPrint('Realtime config fetch error: $e');
+    }
+    return null;
+  }
 }

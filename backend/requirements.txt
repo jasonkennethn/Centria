@@ -17,3 +17,5 @@ python-docx>=1.1.0
 python-dotenv>=1.0.0
 gunicorn>=21.2.0
 whitenoise>=6.6.0
+channels>=4.3.0
+daphne>=4.2.0
