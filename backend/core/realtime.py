@@ -2,6 +2,7 @@
 Real-time dispatch services for Centria.
 Handles WebSocket broadcasts across Channels groups and exposes Neon Realtime configurations.
 """
+import json
 import logging
 import asyncio
 from asgiref.sync import async_to_sync
@@ -10,6 +11,32 @@ from django.conf import settings
 
 logger = logging.getLogger('centria.realtime')
 
+MAX_BROADCAST_PAYLOAD_BYTES = 65536  # 64 KB limit
+ALLOWED_EVENT_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-:.")
+
+
+def _validate_broadcast(target_id, event_type: str, data: dict) -> bool:
+    if not target_id:
+        return False
+    if not isinstance(event_type, str) or not (1 <= len(event_type) <= 64):
+        logger.warning(f"Rejected invalid broadcast event_type: {event_type}")
+        return False
+    if not all(c in ALLOWED_EVENT_CHARS for c in event_type):
+        logger.warning(f"Rejected illegal characters in event_type: {event_type}")
+        return False
+    if not isinstance(data, dict):
+        logger.warning(f"Rejected non-dict broadcast data for {event_type}")
+        return False
+    try:
+        payload_bytes = len(json.dumps(data))
+        if payload_bytes > MAX_BROADCAST_PAYLOAD_BYTES:
+            logger.warning(f"Rejected oversized broadcast data for {event_type} ({payload_bytes} bytes)")
+            return False
+    except (TypeError, ValueError) as e:
+        logger.warning(f"Rejected non-serializable broadcast data for {event_type}: {e}")
+        return False
+    return True
+
 
 def broadcast_workspace_event(company_id, event_type: str, data: dict):
     """
@@ -17,7 +44,7 @@ def broadcast_workspace_event(company_id, event_type: str, data: dict):
     Channels group: workspace_<company_id>
     Safe for both synchronous signals/views and asynchronous event loops.
     """
-    if not company_id:
+    if not _validate_broadcast(company_id, event_type, data):
         return
     
     channel_layer = get_channel_layer()
@@ -51,7 +78,7 @@ def broadcast_user_event(user_id, event_type: str, data: dict):
     Channels group: user_<user_id>
     Safe for both synchronous signals/views and asynchronous event loops.
     """
-    if not user_id:
+    if not _validate_broadcast(user_id, event_type, data):
         return
 
     channel_layer = get_channel_layer()

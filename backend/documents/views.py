@@ -30,8 +30,17 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not uploaded_file:
             return Response({'error': 'File is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Determine file type
+        MAX_DOCUMENT_SIZE = 25 * 1024 * 1024  # 25 MB
+        if uploaded_file.size > MAX_DOCUMENT_SIZE:
+            return Response({'error': 'File size exceeds maximum allowable limit of 25 MB.'}, status=status.HTTP_400_BAD_REQUEST)
+        if uploaded_file.size == 0:
+            return Response({'error': 'Uploaded file is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt', 'md', 'markdown'}
         ext = os.path.splitext(uploaded_file.name)[1].lower().lstrip('.')
+        if ext not in ALLOWED_EXTENSIONS:
+            return Response({'error': f"File type '.{ext}' is not supported. Allowed formats: PDF, DOCX, TXT, MD."}, status=status.HTTP_400_BAD_REQUEST)
+
         file_type = 'pdf' if ext == 'pdf' else ('docx' if ext in ('docx', 'doc') else ('markdown' if ext in ('md', 'markdown') else 'txt'))
 
         # Read file bytes for indexing

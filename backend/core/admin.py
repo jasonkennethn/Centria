@@ -37,8 +37,18 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.is_superuser:
+            readonly.extend(['is_platform_admin', 'is_superuser', 'is_staff'])
+        return readonly
+
 
 @admin.register(PasswordResetOTP)
 class PasswordResetOTPAdmin(admin.ModelAdmin):
-    list_display = ('user', 'otp_code', 'is_used', 'expires_at', 'created_at')
-    search_fields = ('user__email', 'otp_code')
+    list_display = ('user', 'is_used', 'expires_at', 'created_at')
+    search_fields = ('user__email',)
+    readonly_fields = ('otp_code', 'user', 'expires_at', 'created_at', 'is_used')
+
+    def has_add_permission(self, request):
+        return False

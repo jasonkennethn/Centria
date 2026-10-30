@@ -11,6 +11,9 @@ from .models import MediaAsset
 logger = logging.getLogger('centria.media')
 
 
+MAX_MEDIA_BYTES = 50 * 1024 * 1024  # 50 MB limit
+
+
 def convert_image_to_avif(file_bytes, quality=80):
     """
     Converts image bytes to AVIF format for high visual fidelity and tiny file sizes.
@@ -22,8 +25,12 @@ def convert_image_to_avif(file_bytes, quality=80):
     except ImportError:
         pass
 
-    img = Image.open(io.BytesIO(file_bytes))
-    width, height = img.size
+    try:
+        img = Image.open(io.BytesIO(file_bytes))
+        width, height = img.size
+    except Image.DecompressionBombError as e:
+        logger.error(f"Image rejected due to decompression bomb: {e}")
+        raise ValueError("Image dimensions too large.")
 
     # Convert RGBA/P to RGB if saving without alpha or keep RGBA if transparency exists
     if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
@@ -69,8 +76,10 @@ def process_and_upload_media(uploaded_file, company, user=None, folder='uploads'
     Processes uploaded image into AVIF format, stores to S3 (or local media fallback),
     and creates a MediaAsset record.
     """
-    original_name = uploaded_file.name
+    original_name = os.path.basename(uploaded_file.name)
     raw_content = uploaded_file.read()
+    if len(raw_content) > MAX_MEDIA_BYTES:
+        raise ValueError("File size exceeds maximum allowable limit of 50 MB.")
     content_type = uploaded_file.content_type or 'application/octet-stream'
 
     is_image = content_type.startswith('image/')
@@ -101,13 +110,15 @@ def process_and_upload_media(uploaded_file, company, user=None, folder='uploads'
     s3 = get_s3_client()
     if s3:
         try:
-            s3.put_object(
-                Bucket=bucket,
-                Key=key,
-                Body=processed_bytes,
-                ContentType=file_mime,
-                ACL='public-read'
-            )
+            put_kwargs = {
+                'Bucket': bucket,
+                'Key': key,
+                'Body': processed_bytes,
+                'ContentType': file_mime,
+            }
+            if getattr(settings, 'AWS_S3_ENABLE_ACL', False):
+                put_kwargs['ACL'] = 'public-read'
+            s3.put_object(**put_kwargs)
             endpoint = settings.AWS_ENDPOINT_URL_S3.rstrip('/')
             file_url = f"{endpoint}/{bucket}/{key}"
         except Exception as e:

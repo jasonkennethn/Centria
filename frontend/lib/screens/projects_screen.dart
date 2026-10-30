@@ -56,8 +56,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              if (nameCtrl.text.isEmpty || keyCtrl.text.isEmpty) return;
-              await ApiService.createProject(name: nameCtrl.text.trim(), key: keyCtrl.text.trim(), description: descCtrl.text.trim());
+              final name = nameCtrl.text.trim();
+              final key = keyCtrl.text.trim().toUpperCase();
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a project name.')),
+                );
+                return;
+              }
+              if (key.length < 2 || key.length > 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Project key must be between 2 and 6 characters.')),
+                );
+                return;
+              }
+              await ApiService.createProject(name: name, key: key, description: descCtrl.text.trim());
               if (ctx.mounted) {
                 Navigator.pop(ctx);
               }

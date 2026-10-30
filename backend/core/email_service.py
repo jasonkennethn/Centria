@@ -1,6 +1,7 @@
 import logging
 import requests
 from django.conf import settings
+from django.utils.html import escape
 
 logger = logging.getLogger('centria.email')
 
@@ -8,19 +9,23 @@ logger = logging.getLogger('centria.email')
 def send_email(to_email, subject, html_content, to_name=None):
     """
     Sends transactional email via Brevo API with verified sender 'Centria <no-reply@celarox.com>'.
+    Sanitizes headers to prevent email header injection attacks.
     """
     api_key = getattr(settings, 'BREVO_API_KEY', '')
     sender_name = getattr(settings, 'EMAIL_SENDER_NAME', 'Centria')
     sender_email = getattr(settings, 'EMAIL_SENDER_ADDRESS', 'no-reply@celarox.com')
 
+    clean_subject = str(subject).replace('\r', '').replace('\n', '').strip()
+    clean_to_name = str(to_name).replace('\r', '').replace('\n', '').strip() if to_name else None
+
     if not api_key:
-        logger.warning(f"[EMAIL MOCK] To: {to_email} | Subject: {subject} | Content: {html_content[:100]}...")
+        logger.warning(f"[EMAIL MOCK] To: {to_email} | Subject: {clean_subject} | Content: {html_content[:100]}...")
         return True
 
     payload = {
         "sender": {"name": sender_name, "email": sender_email},
-        "to": [{"email": to_email, "name": to_name or to_email}],
-        "subject": subject,
+        "to": [{"email": to_email, "name": clean_to_name or to_email}],
+        "subject": clean_subject,
         "htmlContent": html_content,
     }
 
@@ -47,8 +52,14 @@ def send_email(to_email, subject, html_content, to_name=None):
 
 
 def send_otp_email(to_email, otp_code, user_name="User"):
-    """Sends 6-digit OTP verification email for password reset."""
-    subject = f"{otp_code} is your Centria verification code"
+    """
+    Sends 6-digit OTP verification email for password reset.
+    HTML-escapes all user-controlled values to eliminate email XSS vulnerabilities.
+    """
+    safe_user_name = escape(str(user_name or "User").strip())
+    safe_otp = escape(str(otp_code).strip())
+
+    subject = f"{safe_otp} is your Centria verification code"
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -70,10 +81,10 @@ def send_otp_email(to_email, otp_code, user_name="User"):
       <div class="card">
         <div class="brand">centria</div>
         <h1>Password Reset Request</h1>
-        <p>Hello {user_name},</p>
+        <p>Hello {safe_user_name},</p>
         <p>We received a request to reset your Centria account password. Use the verification code below to complete the reset. This code is valid for 10 minutes.</p>
         <div class="otp-box">
-          <div class="otp-code">{otp_code}</div>
+          <div class="otp-code">{safe_otp}</div>
         </div>
         <p class="expiry">If you did not request this, you can safely ignore this email.</p>
         <div class="footer">

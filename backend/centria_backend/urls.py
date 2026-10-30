@@ -17,3 +17,27 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+from django.http import JsonResponse
+
+
+def custom_bad_request(request, exception=None):
+    return JsonResponse({'error': 'Bad Request', 'status_code': 400}, status=400)
+
+
+def custom_permission_denied(request, exception=None):
+    return JsonResponse({'error': 'Permission Denied', 'status_code': 403}, status=403)
+
+
+def custom_not_found(request, exception=None):
+    return JsonResponse({'error': 'Endpoint Not Found', 'status_code': 404}, status=404)
+
+
+def custom_server_error(request):
+    return JsonResponse({'error': 'Internal Server Error', 'status_code': 500}, status=500)
+
+
+handler400 = 'centria_backend.urls.custom_bad_request'
+handler403 = 'centria_backend.urls.custom_permission_denied'
+handler404 = 'centria_backend.urls.custom_not_found'
+handler500 = 'centria_backend.urls.custom_server_error'

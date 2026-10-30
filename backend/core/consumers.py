@@ -12,6 +12,7 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 from django.utils import timezone
 import google.generativeai as genai
+from core.ws_auth import get_user_from_token, validate_ws_user_state
 
 logger = logging.getLogger('centria.realtime')
 
@@ -52,6 +53,9 @@ class WorkspaceConsumer(AsyncJsonWebsocketConsumer):
             self.channel_name
         )
 
+        self.token_exp = self.scope.get('token_exp')
+        self._heartbeat_task = asyncio.create_task(self._periodic_heartbeat())
+
         await self.accept()
 
         # Send initial confirmation and Neon Realtime endpoint metadata
@@ -65,6 +69,8 @@ class WorkspaceConsumer(AsyncJsonWebsocketConsumer):
         })
 
     async def disconnect(self, close_code):
+        if hasattr(self, '_heartbeat_task') and self._heartbeat_task:
+            self._heartbeat_task.cancel()
         if hasattr(self, 'workspace_group_name'):
             await self.channel_layer.group_discard(
                 self.workspace_group_name,
@@ -76,12 +82,81 @@ class WorkspaceConsumer(AsyncJsonWebsocketConsumer):
                 self.channel_name
             )
 
+    async def _periodic_heartbeat(self):
+        try:
+            while True:
+                await asyncio.sleep(45)
+                if self.token_exp and timezone.now().timestamp() > self.token_exp:
+                    logger.warning(f"Closing expired WS connection for user {getattr(self.user, 'id', None)}")
+                    try:
+                        await self.send_json({"type": "error", "code": "token_expired", "message": "Authentication token expired. Please reconnect."})
+                    except Exception:
+                        pass
+                    await self.close(code=4001)
+                    break
+                if self.user and hasattr(self.user, 'id'):
+                    is_valid, _, _ = await validate_ws_user_state(self.user.id, self.company_id)
+                    if not is_valid:
+                        logger.warning(f"Closing revoked WS connection for user {self.user.id}")
+                        try:
+                            await self.send_json({"type": "error", "code": "user_revoked", "message": "User session has been revoked or company access disabled."})
+                        except Exception:
+                            pass
+                        await self.close(code=4001)
+                        break
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.debug(f"Workspace periodic heartbeat stopped: {e}")
+
     async def receive_json(self, content, **kwargs):
-        """Handle client inbound messages (ping, heartbeat)."""
+        """Handle client inbound messages (ping, heartbeat, token refresh)."""
+        # 1. Validate that connected user is still active in DB and tenant membership holds
+        is_valid, user, company = await validate_ws_user_state(self.user.id, self.company_id)
+        if not is_valid:
+            logger.warning(f"Closing WS connection for revoked or disabled user {self.user.id}")
+            await self.send_json({
+                "type": "error",
+                "code": "user_revoked",
+                "message": "User session has been revoked or company access disabled."
+            })
+            await self.close(code=4001)
+            return
+
+        # 2. Token refresh support on heartbeat / ping or explicit refresh
+        refreshed_token = content.get('token')
         action = content.get('action')
-        if action == 'ping':
+
+        if refreshed_token:
+            new_user, new_company, new_exp = await get_user_from_token(refreshed_token)
+            if new_user and new_user.is_authenticated and str(new_user.id) == str(self.user.id):
+                self.token_exp = new_exp
+                self.scope['token_exp'] = new_exp
+                if action == 'refresh_token':
+                    await self.send_json({
+                        "type": "token_refreshed",
+                        "status": "valid",
+                        "server_time": timezone.now().isoformat()
+                    })
+                    return
+            else:
+                logger.warning(f"Invalid refresh token provided for user {self.user.id}")
+                await self.send_json({"type": "error", "code": "token_invalid", "message": "Provided token is invalid."})
+                await self.close(code=4001)
+                return
+
+        # 3. Check token expiry
+        if self.token_exp and timezone.now().timestamp() > self.token_exp:
+            logger.warning(f"WebSocket session expired for user {self.user.id}")
+            await self.send_json({"type": "error", "code": "token_expired", "message": "Authentication token expired. Please reconnect."})
+            await self.close(code=4001)
+            return
+
+        # 4. Inbound heartbeats
+        if action in ('ping', 'heartbeat'):
             await self.send_json({
                 "type": "pong",
+                "status": "healthy",
                 "timestamp": timezone.now().isoformat()
             })
         elif action == 'echo':
@@ -125,26 +200,84 @@ class AIAssistantConsumer(AsyncJsonWebsocketConsumer):
             await self.close(code=4003)
             return
 
+        self.token_exp = self.scope.get('token_exp')
+        self._cancellation_event = threading.Event()
+        self._heartbeat_task = asyncio.create_task(self._periodic_heartbeat())
+
         await self.accept()
         await self.send_json({
             "type": "ai_stream_ready",
             "model": getattr(settings, 'GEMINI_MODEL', 'models/gemini-2.5-flash'),
         })
 
+    async def disconnect(self, close_code):
+        if hasattr(self, '_heartbeat_task') and self._heartbeat_task:
+            self._heartbeat_task.cancel()
+        if hasattr(self, '_cancellation_event'):
+            self._cancellation_event.set()
+
+    async def _periodic_heartbeat(self):
+        try:
+            while True:
+                await asyncio.sleep(45)
+                if self.token_exp and timezone.now().timestamp() > self.token_exp:
+                    try:
+                        await self.send_json({"type": "error", "code": "token_expired", "message": "Authentication token expired. Please reconnect."})
+                    except Exception:
+                        pass
+                    await self.close(code=4001)
+                    break
+                if self.user and hasattr(self.user, 'id'):
+                    is_valid, _, _ = await validate_ws_user_state(self.user.id, getattr(self.company, 'id', None))
+                    if not is_valid:
+                        try:
+                            await self.send_json({"type": "error", "code": "user_revoked", "message": "User session has been revoked or company access disabled."})
+                        except Exception:
+                            pass
+                        await self.close(code=4001)
+                        break
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logger.debug(f"AI Assistant periodic heartbeat stopped: {e}")
+
     async def receive_json(self, content, **kwargs):
         """
         Receives prompt payload and streams response tokens chunk-by-chunk.
-        Expected payload:
-        {
-          "prompt": "...",
-          "context_type": "general",
-          "context_id": "",
-          "conversation_id": ""
-        }
         """
+        # Validate that connected user is still active in DB
+        is_valid, user, company = await validate_ws_user_state(
+            self.user.id, getattr(self.company, 'id', None)
+        )
+        if not is_valid:
+            await self.send_json({
+                "type": "error",
+                "code": "user_revoked",
+                "message": "User session has been revoked or company access disabled."
+            })
+            await self.close(code=4001)
+            return
+
+        # Check token expiration
+        if self.token_exp and timezone.now().timestamp() > self.token_exp:
+            await self.send_json({
+                "type": "error",
+                "code": "token_expired",
+                "message": "Authentication token expired. Please reconnect."
+            })
+            await self.close(code=4001)
+            return
+
+        # Enforce bounded prompt length (prevents Gemini 400 errors and DB payload issues)
         prompt = content.get('prompt', '').strip()
         if not prompt:
             await self.send_json({"type": "error", "message": "Prompt cannot be empty."})
+            return
+        if len(prompt) > 8192:
+            await self.send_json({
+                "type": "error",
+                "message": "Prompt exceeds maximum allowable length of 8192 characters."
+            })
             return
 
         context_type = content.get('context_type', 'general')
@@ -168,9 +301,11 @@ class AIAssistantConsumer(AsyncJsonWebsocketConsumer):
             "citations": citations,
         })
 
-        # 2. Run Gemini streaming generation in a worker thread and stream tokens asynchronously
+        # 2. Run Gemini streaming generation in worker thread with cancellation support
         queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
+        self._cancellation_event.clear()
+        cancel_evt = self._cancellation_event
 
         def worker():
             try:
@@ -179,59 +314,81 @@ class AIAssistantConsumer(AsyncJsonWebsocketConsumer):
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(full_prompt, stream=True)
                 for chunk in response:
-                    text_chunk = getattr(chunk, 'text', '')
-                    if text_chunk:
-                        loop.call_soon_threadsafe(queue.put_nowait, ("chunk", text_chunk))
+                    if cancel_evt.is_set():
+                        break
+                    
+                    text_chunk = ""
+                    try:
+                        text_chunk = chunk.text
+                    except (AttributeError, ValueError, Exception):
+                        if hasattr(chunk, 'candidates') and chunk.candidates:
+                            candidate = chunk.candidates[0]
+                            if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                                text_chunk = "".join([getattr(p, 'text', '') for p in candidate.content.parts if hasattr(p, 'text')])
+                    
+                    if text_chunk and not cancel_evt.is_set():
+                        if not loop.is_closed():
+                            loop.call_soon_threadsafe(queue.put_nowait, ("chunk", text_chunk))
             except Exception as e:
                 logger.error(f"Gemini streaming exception: {e}")
-                loop.call_soon_threadsafe(queue.put_nowait, ("error", str(e)))
+                if not cancel_evt.is_set() and not loop.is_closed():
+                    loop.call_soon_threadsafe(queue.put_nowait, ("error", str(e)))
             finally:
-                loop.call_soon_threadsafe(queue.put_nowait, ("done", None))
+                if not loop.is_closed():
+                    loop.call_soon_threadsafe(queue.put_nowait, ("done", None))
 
         threading.Thread(target=worker, daemon=True).start()
 
         full_reply = []
         has_error = False
 
-        while True:
-            kind, val = await queue.get()
-            if kind == "chunk":
-                full_reply.append(val)
-                await self.send_json({
-                    "type": "token",
-                    "chunk": val,
-                    "conversation_id": conversation_id,
-                })
-            elif kind == "error":
-                has_error = True
-                await self.send_json({
-                    "type": "error",
-                    "message": f"Generation failed: {val}",
-                    "conversation_id": conversation_id,
-                })
-                break
-            elif kind == "done":
-                break
+        try:
+            while True:
+                kind, val = await queue.get()
+                if kind == "chunk":
+                    full_reply.append(val)
+                    await self.send_json({
+                        "type": "token",
+                        "chunk": val,
+                        "conversation_id": conversation_id,
+                    })
+                elif kind == "error":
+                    has_error = True
+                    await self.send_json({
+                        "type": "error",
+                        "message": f"Generation failed: {val}",
+                        "conversation_id": conversation_id,
+                    })
+                    break
+                elif kind == "done":
+                    break
+        except Exception as e:
+            logger.warning(f"Client disconnected or socket closed during streaming: {e}")
+            cancel_evt.set()
+            return
 
         complete_text = "".join(full_reply).strip()
         if not complete_text and not has_error:
             complete_text = "I have completed processing your request."
 
-        # 3. Save assistant message and log activity in DB
-        msg_id = await self._finalize_ai_turn(conversation_id, complete_text, citations, full_prompt)
+        # 3. Save conversation turn and log activity in DB atomically (DB-after-API)
+        msg_id = await self._finalize_ai_turn(conversation_id, prompt, complete_text, citations, full_prompt)
 
         # Notify completion
-        await self.send_json({
-            "type": "stream_done",
-            "conversation_id": conversation_id,
-            "message_id": msg_id,
-            "citations": citations,
-            "full_response": complete_text,
-        })
+        try:
+            await self.send_json({
+                "type": "stream_done",
+                "conversation_id": conversation_id,
+                "message_id": msg_id,
+                "citations": citations,
+                "full_response": complete_text,
+            })
+        except Exception:
+            cancel_evt.set()
 
     @database_sync_to_async
     def _setup_conversation(self, prompt, conversation_id, context_type, context_id):
-        from ai_engine.models import AIConversation, AIMessage
+        from ai_engine.models import AIConversation
         from ai_engine.services import check_and_increment_quota, gather_context
         from documents.services import search_knowledge_base
 
@@ -252,13 +409,6 @@ class AIAssistantConsumer(AsyncJsonWebsocketConsumer):
                 context_type=context_type,
                 context_id=context_id or ''
             )
-
-        # Record user message
-        AIMessage.objects.create(
-            conversation=conversation,
-            sender='user',
-            content=prompt,
-        )
 
         # Retrieve RAG Citations
         citations = search_knowledge_base(self.company, prompt, top_k=3)
@@ -286,29 +436,37 @@ class AIAssistantConsumer(AsyncJsonWebsocketConsumer):
         }
 
     @database_sync_to_async
-    def _finalize_ai_turn(self, conversation_id, complete_text, citations, full_prompt):
+    def _finalize_ai_turn(self, conversation_id, prompt, complete_text, citations, full_prompt):
         from ai_engine.models import AIConversation, AIMessage
         from audit.models import log_activity
+        from django.db import transaction
 
-        conversation = AIConversation.objects.filter(id=conversation_id).first()
-        if not conversation:
-            return ""
+        with transaction.atomic():
+            conversation = AIConversation.objects.filter(id=conversation_id).first()
+            if not conversation:
+                return ""
 
-        ai_msg = AIMessage.objects.create(
-            conversation=conversation,
-            sender='assistant',
-            content=complete_text,
-            citations=citations,
-            tokens_used=len(full_prompt.split()) + len(complete_text.split())
-        )
+            AIMessage.objects.create(
+                conversation=conversation,
+                sender='user',
+                content=prompt,
+            )
 
-        log_activity(
-            company=self.company,
-            user=self.user,
-            action='AI_QUERY',
-            resource_type='ai',
-            resource_id=str(conversation.id),
-            description=f"Streamed AI query finished with {len(citations)} citations."
-        )
+            ai_msg = AIMessage.objects.create(
+                conversation=conversation,
+                sender='assistant',
+                content=complete_text,
+                citations=citations,
+                tokens_used=len(full_prompt.split()) + len(complete_text.split())
+            )
 
-        return str(ai_msg.id)
+            log_activity(
+                company=self.company,
+                user=self.user,
+                action='AI_QUERY',
+                resource_type='ai',
+                resource_id=str(conversation.id),
+                description=f"Streamed AI query finished with {len(citations)} citations."
+            )
+
+            return str(ai_msg.id)

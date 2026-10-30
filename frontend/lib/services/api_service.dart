@@ -2,10 +2,15 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  static const String _renderUrl = 'https://centria-enterprise.onrender.com';
-  static const String _localUrl = 'http://127.0.0.1:8000';
+  // Configurable base URLs via --dart-define=API_BASE_URL=... and --dart-define=WS_BASE_URL=...
+  static const String _envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String _envWsBaseUrl = String.fromEnvironment('WS_BASE_URL');
+
+  static const String _defaultProductionUrl = 'https://centria-enterprise.onrender.com';
+  static const String _defaultLocalUrl = 'http://127.0.0.1:8000';
 
   static String? _customBaseUrl;
   static set baseUrl(String url) => _customBaseUrl = url;
@@ -13,14 +18,24 @@ class ApiService {
   // Dynamic Base URL: on web, if accessed from localhost or 127.0.0.1, use local backend
   static String get baseUrl {
     if (_customBaseUrl != null) return _customBaseUrl!;
+    if (_envApiBaseUrl.isNotEmpty) return _envApiBaseUrl;
+
     if (kIsWeb) {
       final host = Uri.base.host;
       if (host == 'localhost' || host == '127.0.0.1' || host == '0.0.0.0' || host.isEmpty) {
-        return _localUrl;
+        return _defaultLocalUrl;
       }
     }
-    return kReleaseMode ? _renderUrl : _localUrl;
+    return kReleaseMode ? _defaultProductionUrl : _defaultLocalUrl;
   }
+
+  // Hardware-backed secure storage for sensitive authentication credentials
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(resetOnError: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+  static String? _cachedAccessToken;
+  static String? _cachedRefreshToken;
 
   static dynamic _parseJson(http.Response res) {
     if (res.body.isEmpty) return null;
@@ -32,21 +47,79 @@ class ApiService {
   }
 
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+    if (_cachedAccessToken != null) return _cachedAccessToken;
+    try {
+      _cachedAccessToken = await _secureStorage.read(key: 'access_token');
+      if (_cachedAccessToken != null && _cachedAccessToken!.isNotEmpty) {
+        return _cachedAccessToken;
+      }
+    } catch (_) {}
+
+    // Migration fallback from SharedPreferences if previously stored
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final legacy = prefs.getString('access_token');
+      if (legacy != null && legacy.isNotEmpty) {
+        _cachedAccessToken = legacy;
+        await _secureStorage.write(key: 'access_token', value: legacy);
+        await prefs.remove('access_token');
+      }
+    } catch (_) {}
+
+    return _cachedAccessToken;
+  }
+
+  static Future<String?> getRefreshToken() async {
+    if (_cachedRefreshToken != null) return _cachedRefreshToken;
+    try {
+      _cachedRefreshToken = await _secureStorage.read(key: 'refresh_token');
+      if (_cachedRefreshToken != null && _cachedRefreshToken!.isNotEmpty) {
+        return _cachedRefreshToken;
+      }
+    } catch (_) {}
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final legacy = prefs.getString('refresh_token');
+      if (legacy != null && legacy.isNotEmpty) {
+        _cachedRefreshToken = legacy;
+        await _secureStorage.write(key: 'refresh_token', value: legacy);
+        await prefs.remove('refresh_token');
+      }
+    } catch (_) {}
+
+    return _cachedRefreshToken;
   }
 
   static Future<void> saveTokens({required String access, required String refresh}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('access_token', access);
-    await prefs.setString('refresh_token', refresh);
+    _cachedAccessToken = access;
+    _cachedRefreshToken = refresh;
+    try {
+      await _secureStorage.write(key: 'access_token', value: access);
+      await _secureStorage.write(key: 'refresh_token', value: refresh);
+    } catch (_) {}
+
+    // Ensure sensitive tokens are completely removed from unencrypted SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+    } catch (_) {}
   }
 
   static Future<void> clearTokens() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
-    await prefs.remove('refresh_token');
-    await prefs.remove('user_data');
+    _cachedAccessToken = null;
+    _cachedRefreshToken = null;
+    try {
+      await _secureStorage.delete(key: 'access_token');
+      await _secureStorage.delete(key: 'refresh_token');
+    } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+      await prefs.remove('user_data');
+    } catch (_) {}
   }
 
   static Future<Map<String, String>> _headers({bool needsAuth = true}) async {
@@ -409,6 +482,7 @@ class ApiService {
   }
 
   static String get wsBaseUrl {
+    if (_envWsBaseUrl.isNotEmpty) return _envWsBaseUrl;
     final uri = Uri.parse(baseUrl);
     final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
     final portStr = uri.hasPort ? ':${uri.port}' : '';

@@ -1,7 +1,7 @@
 import re
 import requests
 from django.utils import timezone
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, views
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from integrations.models import GitHubIntegration, GitHubLinkedPR
@@ -100,3 +100,35 @@ class GitHubIntegrationViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+import hmac
+import hashlib
+import os
+from django.conf import settings
+
+
+class GitHubWebhookView(views.APIView):
+    """Webhook receiver for GitHub events with strict HMAC-SHA256 signature verification."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        signature_header = (request.headers.get('X-Hub-Signature-256') or request.META.get('HTTP_X_HUB_SIGNATURE_256', '')).strip()
+        if not signature_header or not signature_header.startswith('sha256='):
+            return Response({'error': 'Missing or invalid signature header.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        webhook_secret = getattr(settings, 'GITHUB_WEBHOOK_SECRET', '') or os.environ.get('GITHUB_WEBHOOK_SECRET', '')
+        if not webhook_secret:
+            return Response({'error': 'Server webhook secret not configured.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        mac = hmac.new(webhook_secret.encode('utf-8'), msg=request.body, digestmod=hashlib.sha256)
+        expected_sig = f"sha256={mac.hexdigest()}"
+
+        if not hmac.compare_digest(signature_header, expected_sig):
+            return Response({'error': 'Signature verification failed.'}, status=status.HTTP_403_FORBIDDEN)
+
+        event_type = request.headers.get('X-GitHub-Event', request.META.get('HTTP_X_GITHUB_EVENT', 'ping'))
+        if event_type == 'ping':
+            return Response({'status': 'pong'}, status=status.HTTP_200_OK)
+
+        return Response({'status': 'accepted', 'event': event_type}, status=status.HTTP_200_OK)

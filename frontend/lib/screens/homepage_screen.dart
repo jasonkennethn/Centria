@@ -1911,11 +1911,33 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
           }
         }
       } else if (_isSignUp) {
+        final compName = _companyNameController.text.trim();
+        final fullName = _fullNameController.text.trim();
+        final email = _emailController.text.trim();
+        final password = _passwordController.text;
+
+        if (compName.isEmpty) {
+          setState(() => _errorMessage = 'Please enter your company or workspace name.');
+          return;
+        }
+        if (fullName.isEmpty) {
+          setState(() => _errorMessage = 'Please enter your full name.');
+          return;
+        }
+        if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+          setState(() => _errorMessage = 'Please enter a valid work email address.');
+          return;
+        }
+        if (password.length < 8) {
+          setState(() => _errorMessage = 'Password must be at least 8 characters long.');
+          return;
+        }
+
         final res = await AuthState().register(
-          companyName: _companyNameController.text.trim(),
-          fullName: _fullNameController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+          companyName: compName,
+          fullName: fullName,
+          email: email,
+          password: password,
         );
         if (res['success']) {
           if (mounted) {
@@ -1926,10 +1948,19 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
           setState(() => _errorMessage = res['error'] ?? 'Sign up failed.');
         }
       } else {
-        final res = await AuthState().login(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+        final email = _emailController.text.trim();
+        final password = _passwordController.text;
+
+        if (email.isEmpty) {
+          setState(() => _errorMessage = 'Please enter your email address.');
+          return;
+        }
+        if (password.isEmpty) {
+          setState(() => _errorMessage = 'Please enter your password.');
+          return;
+        }
+
+        final res = await AuthState().login(email, password);
         if (res['success']) {
           if (mounted) {
             Navigator.pop(context);

@@ -116,16 +116,28 @@ class _TasksScreenState extends State<TasksScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: () async {
-                if (titleCtrl.text.isEmpty) return;
+                final title = titleCtrl.text.trim();
+                if (title.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a task title.')),
+                  );
+                  return;
+                }
                 final projects = await ApiService.getProjects();
-                if (projects.isNotEmpty) {
-                  await ApiService.createTask(projectId: projects.first['id'], title: titleCtrl.text.trim(), priority: priority);
-                  if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                  }
+                if (projects.isEmpty) {
                   if (mounted) {
-                    _loadTasks();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No project available. Please create a project first.')),
+                    );
                   }
+                  return;
+                }
+                await ApiService.createTask(projectId: projects.first['id'], title: title, priority: priority);
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                }
+                if (mounted) {
+                  _loadTasks();
                 }
               },
               child: const Text('Create Task'),

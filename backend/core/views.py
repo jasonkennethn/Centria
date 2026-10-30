@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db import transaction
+from django.conf import settings
 from rest_framework import status, permissions, views, generics
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -57,8 +58,22 @@ def bootstrap_company_roles(company):
     return roles
 
 
+from rest_framework.throttling import AnonRateThrottle
+
+
+class AuthRateThrottle(AnonRateThrottle):
+    scope = 'auth'
+    rate = '10/minute'
+
+
+class PasswordResetRateThrottle(AnonRateThrottle):
+    scope = 'password_reset'
+    rate = '5/minute'
+
+
 class CentriaTokenObtainPairView(TokenObtainPairView):
     serializer_class = CentriaTokenObtainPairSerializer
+    throttle_classes = [AuthRateThrottle]
 
     def post(self, request, *args, **kwargs):
         res = super().post(request, *args, **kwargs)
@@ -79,6 +94,7 @@ class CentriaTokenObtainPairView(TokenObtainPairView):
 
 class RegisterView(views.APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]
 
     @transaction.atomic
     def post(self, request):
@@ -104,7 +120,8 @@ class RegisterView(views.APIView):
         owner_role = roles.get('Owner')
 
         email = data['email'].strip().lower()
-        is_platform_admin = (email == 'jasonkennethn@gmail.com')
+        platform_admins = getattr(settings, 'PLATFORM_ADMIN_EMAILS', [])
+        is_platform_admin = bool(platform_admins and email in platform_admins)
 
         user = User.objects.create_user(
             email=email,
@@ -137,6 +154,7 @@ class RegisterView(views.APIView):
 
 class ForgotPasswordView(views.APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
@@ -175,6 +193,7 @@ class ForgotPasswordView(views.APIView):
 
 class ResetPasswordView(views.APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
@@ -280,11 +299,11 @@ class TeamListView(views.APIView):
 
 
 class PlatformAdminOverviewView(views.APIView):
-    """Platform admin overview for jasonkennethn@gmail.com."""
+    """Platform administrator overview dashboard for authorized platform administrators."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_platform_admin:
+        if not (request.user.is_platform_admin or request.user.is_superuser):
             return Response({'error': 'Platform administrator access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         companies_count = Company.objects.count()
@@ -310,4 +329,6 @@ class RealtimeConfigView(views.APIView):
         config['company_id'] = str(request.company.id) if request.company else None
         config['ws_workspace_url'] = f"/ws/workspace/{request.company.id}/" if request.company else None
         config['ws_ai_stream_url'] = "/ws/ai/stream/"
+        if not (getattr(request.user, 'is_platform_admin', False) or getattr(request.user, 'is_superuser', False)):
+            config.pop('realtime_token', None)
         return Response(config)

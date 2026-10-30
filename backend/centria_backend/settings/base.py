@@ -10,7 +10,10 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'change-me-in-production')
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY and (os.environ.get('DJANGO_SETTINGS_MODULE', '').endswith('.dev') or not os.environ.get('DJANGO_SETTINGS_MODULE')):
+    SECRET_KEY = 'django-insecure-centria-dev-only-secret-key-not-for-production'
+
 DEBUG = False
 ALLOWED_HOSTS = []
 
@@ -154,6 +157,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '30/minute',
         'user': '120/minute',
+        'auth': '10/minute',
+        'password_reset': '5/minute',
     },
 }
 
@@ -213,3 +218,8 @@ CHANNEL_LAYERS = {
 # Neon Realtime DB configuration
 NEON_REALTIME_URL = os.environ.get('NEON_REALTIME_URL', '')
 NEON_REALTIME_TOKEN = os.environ.get('NEON_REALTIME_TOKEN', '')
+
+# Platform Administrator Accounts (loaded securely from environment)
+PLATFORM_ADMIN_EMAILS = [
+    e.strip().lower() for e in os.environ.get('PLATFORM_ADMIN_EMAILS', '').split(',') if e.strip()
+]

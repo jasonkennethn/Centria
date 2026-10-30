@@ -1,9 +1,16 @@
 # Environment & Secrets
 .env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/*.env
 backend/.env
+backend/.env.*
 env/
 venv/
-*.env
+!.env.example
+!**/.env.example
 
 # Python & Django
 __pycache__/

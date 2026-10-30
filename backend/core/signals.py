@@ -9,11 +9,24 @@ Broadcasts instant updates via Channels WebSockets across:
 6. Dashboards (Live operational activity stream)
 """
 import logging
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from core.realtime import broadcast_workspace_event, broadcast_user_event
 
 logger = logging.getLogger('centria.signals')
+
+
+def safe_on_commit(callback):
+    """
+    Executes callback only after the database transaction has committed.
+    Prevents ghost updates where clients receive WebSocket broadcasts
+    before row changes are committed or visible in PostgreSQL.
+    """
+    try:
+        transaction.on_commit(callback)
+    except Exception:
+        callback()
 
 
 @receiver(post_save, sender='projects.Task')
@@ -22,7 +35,7 @@ def task_realtime_broadcast(sender, instance, created, **kwargs):
     try:
         company_id = instance.company_id
         event_name = 'task_created' if created else 'task_updated'
-        
+
         data = {
             'id': str(instance.id),
             'key': instance.key,
@@ -38,16 +51,24 @@ def task_realtime_broadcast(sender, instance, created, **kwargs):
             'due_date': str(instance.due_date) if instance.due_date else None,
             'is_created': created,
         }
-        broadcast_workspace_event(company_id, event_name, data)
 
-        # Notify assigned user if newly assigned
-        if instance.assignee_id:
-            broadcast_user_event(instance.assignee_id, 'notification', {
-                'title': 'Task Assignment',
-                'message': f"Assigned to {instance.key}: {instance.title} ({instance.status.upper()})",
-                'resource_type': 'task',
-                'resource_id': str(instance.id),
-            })
+        assignee_id = instance.assignee_id
+        task_key = instance.key
+        task_title = instance.title
+        task_status = instance.status
+        task_id = str(instance.id)
+
+        def dispatch():
+            broadcast_workspace_event(company_id, event_name, data)
+            if assignee_id:
+                broadcast_user_event(assignee_id, 'notification', {
+                    'title': 'Task Assignment',
+                    'message': f"Assigned to {task_key}: {task_title} ({task_status.upper()})",
+                    'resource_type': 'task',
+                    'resource_id': task_id,
+                })
+
+        safe_on_commit(dispatch)
     except Exception as e:
         logger.warning(f"Error in task_realtime_broadcast: {e}")
 
@@ -68,16 +89,23 @@ def task_comment_realtime_broadcast(sender, instance, created, **kwargs):
             'content_snippet': instance.content[:120],
             'created_at': instance.created_at.isoformat(),
         }
-        broadcast_workspace_event(company_id, 'task_comment_created', data)
 
-        # Notify task assignee if someone else commented
-        if task.assignee_id and (not instance.author_id or instance.author_id != task.assignee_id):
-            broadcast_user_event(task.assignee_id, 'notification', {
-                'title': f"New Comment on {task.key}",
-                'message': f"{data['author_name']}: {data['content_snippet']}",
-                'resource_type': 'task',
-                'resource_id': str(task.id),
-            })
+        assignee_id = task.assignee_id
+        author_id = instance.author_id
+        task_key = task.key
+        task_id = str(task.id)
+
+        def dispatch():
+            broadcast_workspace_event(company_id, 'task_comment_created', data)
+            if assignee_id and (not author_id or author_id != assignee_id):
+                broadcast_user_event(assignee_id, 'notification', {
+                    'title': f"New Comment on {task_key}",
+                    'message': f"{data['author_name']}: {data['content_snippet']}",
+                    'resource_type': 'task',
+                    'resource_id': task_id,
+                })
+
+        safe_on_commit(dispatch)
     except Exception as e:
         logger.warning(f"Error in task_comment_realtime_broadcast: {e}")
 
@@ -101,16 +129,24 @@ def approval_realtime_broadcast(sender, instance, created, **kwargs):
             'pending_count': pending_count,
             'is_created': created,
         }
-        broadcast_workspace_event(company_id, event_name, data)
 
-        # If decided, notify requester
-        if not created and instance.status in ('approved', 'rejected') and instance.requester_id:
-            broadcast_user_event(instance.requester_id, 'notification', {
-                'title': f"Approval Request {instance.status.capitalize()}",
-                'message': f"'{instance.title}' was {instance.status} by {instance.decided_by.full_name if instance.decided_by else 'Reviewer'}.",
-                'resource_type': 'approval',
-                'resource_id': str(instance.id),
-            })
+        status_val = instance.status
+        requester_id = instance.requester_id
+        title_val = instance.title
+        instance_id = str(instance.id)
+        decided_by_name = instance.decided_by.full_name if instance.decided_by else 'Reviewer'
+
+        def dispatch():
+            broadcast_workspace_event(company_id, event_name, data)
+            if not created and status_val in ('approved', 'rejected') and requester_id:
+                broadcast_user_event(requester_id, 'notification', {
+                    'title': f"Approval Request {status_val.capitalize()}",
+                    'message': f"'{title_val}' was {status_val} by {decided_by_name}.",
+                    'resource_type': 'approval',
+                    'resource_id': instance_id,
+                })
+
+        safe_on_commit(dispatch)
     except Exception as e:
         logger.warning(f"Error in approval_realtime_broadcast: {e}")
 
@@ -127,7 +163,7 @@ def project_realtime_broadcast(sender, instance, created, **kwargs):
             'status': instance.status,
             'is_created': created,
         }
-        broadcast_workspace_event(company_id, 'project_updated', data)
+        safe_on_commit(lambda: broadcast_workspace_event(company_id, 'project_updated', data))
     except Exception as e:
         logger.warning(f"Error in project_realtime_broadcast: {e}")
 
@@ -145,7 +181,7 @@ def github_pr_realtime_broadcast(sender, instance, created, **kwargs):
             'linked_task_id': str(instance.linked_task_id) if instance.linked_task_id else None,
             'linked_task_key': instance.linked_task.key if instance.linked_task else None,
         }
-        broadcast_workspace_event(company_id, 'github_sync', data)
+        safe_on_commit(lambda: broadcast_workspace_event(company_id, 'github_sync', data))
     except Exception as e:
         logger.warning(f"Error in github_pr_realtime_broadcast: {e}")
 
@@ -164,6 +200,7 @@ def audit_activity_realtime_broadcast(sender, instance, created, **kwargs):
             'user_name': instance.user.full_name if instance.user else 'System',
             'timestamp': instance.timestamp.isoformat(),
         }
-        broadcast_workspace_event(instance.company_id, 'dashboard_activity', data)
+        company_id = instance.company_id
+        safe_on_commit(lambda: broadcast_workspace_event(company_id, 'dashboard_activity', data))
     except Exception as e:
         logger.warning(f"Error in audit_activity_realtime_broadcast: {e}")

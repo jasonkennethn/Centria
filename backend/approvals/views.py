@@ -31,6 +31,11 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        assigned_approver = serializer.validated_data.get('assigned_approver')
+        if assigned_approver and assigned_approver.company_id and assigned_approver.company_id != self.request.company.id:
+            from rest_framework import exceptions
+            raise exceptions.PermissionDenied("Assigned approver must belong to your company.")
+
         req = serializer.save(company=self.request.company, requester=self.request.user)
         log_activity(
             company=self.request.company,
@@ -44,6 +49,10 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         req = self.get_object()
+        if req.company_id != request.company.id:
+            return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+        if req.requester_id == request.user.id and not (request.user.is_superuser or request.user.is_platform_admin):
+            return Response({'error': 'You cannot approve your own request.'}, status=status.HTTP_400_BAD_REQUEST)
         if req.status != 'pending':
             return Response({'error': f'Request is already {req.status}'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -68,6 +77,8 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         req = self.get_object()
+        if req.company_id != request.company.id:
+            return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         if req.status != 'pending':
             return Response({'error': f'Request is already {req.status}'}, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, views, status
+from rest_framework import viewsets, permissions, views, status, exceptions
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db.models import Count, Q
@@ -26,6 +26,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ).select_related('lead')
 
     def perform_create(self, serializer):
+        lead = serializer.validated_data.get('lead')
+        if lead and lead.company_id and lead.company_id != self.request.company.id:
+            raise exceptions.PermissionDenied("Selected lead must belong to your company.")
         project = serializer.save(company=self.request.company)
         log_activity(
             company=self.request.company,
@@ -64,6 +67,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        project = serializer.validated_data.get('project')
+        if project and project.company_id != self.request.company.id:
+            raise exceptions.PermissionDenied("Project does not belong to your company.")
+
+        assignee = serializer.validated_data.get('assignee')
+        if assignee and assignee.company_id and assignee.company_id != self.request.company.id:
+            raise exceptions.PermissionDenied("Assignee does not belong to your company.")
+
         task = serializer.save(company=self.request.company, creator=self.request.user)
         log_activity(
             company=self.request.company,
@@ -75,6 +86,14 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        project = serializer.validated_data.get('project')
+        if project and project.company_id != self.request.company.id:
+            raise exceptions.PermissionDenied("Project does not belong to your company.")
+
+        assignee = serializer.validated_data.get('assignee')
+        if assignee and assignee.company_id and assignee.company_id != self.request.company.id:
+            raise exceptions.PermissionDenied("Assignee does not belong to your company.")
+
         old_status = self.get_object().status
         task = serializer.save()
         if old_status != task.status:
@@ -90,6 +109,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='comments')
     def add_comment(self, request, pk=None):
         task = self.get_object()
+        if task.company_id != request.company.id:
+            return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
         content = request.data.get('content', '').strip()
         if not content:
             return Response({'error': 'Comment content cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)

@@ -15,6 +15,9 @@ class AIConversationViewSet(viewsets.ModelViewSet):
             return AIConversation.objects.none()
         return AIConversation.objects.filter(company=self.request.company, user=self.request.user)
 
+    def perform_create(self, serializer):
+        serializer.save(company=self.request.company, user=self.request.user)
+
 
 class AskAIView(views.APIView):
     """Entrypoint for Centria Assistant queries across all operational contexts."""
