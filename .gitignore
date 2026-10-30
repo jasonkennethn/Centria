@@ -27,6 +27,8 @@ frontend/build/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.packages
+frontend/flutter/
+flutter/
 .pub-cache/
 .pub/
 
