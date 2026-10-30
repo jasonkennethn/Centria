@@ -15,7 +15,8 @@ if backend_dir not in sys.path:
 # Set working directory to backend
 chdir = backend_dir
 
-# Default bind settings for Render
-bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
+# Default bind settings for Render (Render defaults to port 10000)
+port = os.environ.get('PORT', '10000')
+bind = f"0.0.0.0:{port}"
 workers = int(os.environ.get('WEB_CONCURRENCY', '1'))
 timeout = 120
