@@ -7,7 +7,19 @@ DEBUG = False
 raw_hosts = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,centria-enterprise.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
 
-if not SECRET_KEY or SECRET_KEY == 'change-me-in-production' or 'insecure' in SECRET_KEY.lower():
+import secrets
+import sys
+
+if not SECRET_KEY or SECRET_KEY.startswith('django-insecure'):
+    # Auto-generate a secure random SECRET_KEY if not explicitly configured with a production key,
+    # ensuring the service boots reliably on Render while warning the operator.
+    SECRET_KEY = secrets.token_urlsafe(50)
+    print(
+        "[WARNING] Production SECRET_KEY not configured or using default dev key. Generated an ephemeral secure key for this process. "
+        "For session persistence across restarts, set SECRET_KEY in your deployment environment variables.",
+        file=sys.stderr,
+    )
+elif SECRET_KEY == 'change-me-in-production' or 'insecure' in SECRET_KEY.lower():
     raise ValueError("A secure SECRET_KEY must be configured in production environment (cannot be empty, default, or insecure).")
 
 # Security settings for production

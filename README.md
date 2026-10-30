@@ -16,9 +16,7 @@
 
 | Service | Environment | Live URL |
 | :--- | :--- | :--- |
-| **Centria Web Application** | Production (Vercel) | [https://centria-enterprise.vercel.app/](https://centria-enterprise.vercel.app/) |
-| **Centria Backend API & Admin** | Production (Render) | [https://centria-enterprise.onrender.com/](https://centria-enterprise.onrender.com/) |
-| **Realtime Neon DB Endpoint** | Cloud (Neon AWS) | `https://ep-aged-sea-b3c9bxpy.rt.c-4.ap-southeast-1.aws.neon.tech/` |
+| **Centria Web Application** | Production | [https://centria-enterprise.vercel.app/](https://centria-enterprise.vercel.app/) |
 | **Source Code Repository** | GitHub | [https://github.com/jasonkennethn/Centria.git](https://github.com/jasonkennethn/Centria.git) |
 
 ---
