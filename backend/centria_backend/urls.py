@@ -13,6 +13,8 @@ urlpatterns = [
     path('api/approvals/', include('approvals.urls')),
     path('api/integrations/', include('integrations.urls')),
     path('api/media/', include('media_pipeline.urls')),
+    path('api/health/', lambda request: JsonResponse({'status': 'healthy', 'service': 'centria'}), name='api_health'),
+    path('health/', lambda request: JsonResponse({'status': 'healthy', 'service': 'centria'}), name='health'),
 ]
 
 if settings.DEBUG:

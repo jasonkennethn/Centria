@@ -11,6 +11,7 @@ import 'package:centria/screens/platform_admin_screen.dart';
 import 'package:centria/widgets/ai_assistant_sheet.dart';
 
 import 'dart:async';
+import 'package:centria/services/api_service.dart';
 import 'package:centria/services/realtime_service.dart';
 
 class AppShell extends StatefulWidget {
@@ -38,6 +39,7 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    ApiService.prefetchWorkspace();
     RealtimeService.instance.connect();
     _subscribeNotifications();
   }
@@ -306,38 +308,41 @@ class _AppShellState extends State<AppShell> {
                 children: [
                   ValueListenableBuilder<bool>(
                     valueListenable: RealtimeService.instance.isConnected,
-                    builder: (ctx, connected, _) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFE0E0E0)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: connected ? const Color(0xFF2E7D32) : const Color(0xFF9E9E9E),
-                            ),
-                          ),
-                          if (!compact) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              connected ? 'Neon DB Live' : 'Offline',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: connected ? const Color(0xFF2E7D32) : const Color(0xFF757575),
+                    builder: (ctx, connected, _) {
+                      if (!connected) return const SizedBox.shrink();
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFA5D6A7)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF2E7D32),
                               ),
                             ),
+                            if (!compact) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                'Neon DB Live',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: 10),
                   compact

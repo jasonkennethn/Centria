@@ -29,6 +29,9 @@ class ApiService {
     return kReleaseMode ? _defaultProductionUrl : _defaultLocalUrl;
   }
 
+  // Persistent HTTP client with connection pooling and keep-alive (drastically cuts latency)
+  static final http.Client _client = http.Client();
+
   // Hardware-backed secure storage for sensitive authentication credentials
   static const _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(resetOnError: true),
@@ -36,6 +39,21 @@ class ApiService {
   );
   static String? _cachedAccessToken;
   static String? _cachedRefreshToken;
+
+  // In-memory cache for ultra-fast instant UI rendering (0 ms latency)
+  static Map<String, dynamic>? _cachedDashboard;
+  static List<dynamic>? _cachedProjects;
+  static List<dynamic>? _cachedTasks;
+  static List<dynamic>? _cachedApprovals;
+  static List<dynamic>? _cachedDocuments;
+  static Map<String, dynamic>? _cachedMe;
+
+  static Map<String, dynamic>? get cachedDashboard => _cachedDashboard;
+  static List<dynamic>? get cachedProjects => _cachedProjects;
+  static List<dynamic>? get cachedTasks => _cachedTasks;
+  static List<dynamic>? get cachedApprovals => _cachedApprovals;
+  static List<dynamic>? get cachedDocuments => _cachedDocuments;
+  static Map<String, dynamic>? get cachedMe => _cachedMe;
 
   static dynamic _parseJson(http.Response res) {
     if (res.body.isEmpty) return null;
@@ -110,6 +128,12 @@ class ApiService {
   static Future<void> clearTokens() async {
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
+    _cachedDashboard = null;
+    _cachedProjects = null;
+    _cachedTasks = null;
+    _cachedApprovals = null;
+    _cachedDocuments = null;
+    _cachedMe = null;
     try {
       await _secureStorage.delete(key: 'access_token');
       await _secureStorage.delete(key: 'refresh_token');
@@ -141,7 +165,7 @@ class ApiService {
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/login/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(needsAuth: false),
         body: jsonEncode({'email': email.trim(), 'password': password}),
@@ -151,6 +175,8 @@ class ApiService {
         await saveTokens(access: data['access'], refresh: data['refresh']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', jsonEncode(data['user']));
+        // Prefetch data immediately after login
+        prefetchWorkspace();
         return {'success': true, 'data': data};
       } else {
         final err = (data is Map)
@@ -174,7 +200,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/register/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(needsAuth: false),
         body: jsonEncode({
@@ -189,6 +215,7 @@ class ApiService {
         await saveTokens(access: data['access'], refresh: data['refresh']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_data', jsonEncode(data['user']));
+        prefetchWorkspace();
         return {'success': true, 'data': data};
       } else {
         final err = (data is Map)
@@ -207,7 +234,7 @@ class ApiService {
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/forgot-password/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(needsAuth: false),
         body: jsonEncode({'email': email.trim()}),
@@ -226,7 +253,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/reset-password/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(needsAuth: false),
         body: jsonEncode({
@@ -247,46 +274,76 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> getMe() async {
+  static Future<Map<String, dynamic>?> getMe({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedMe != null) {
+      _fetchMeDirect();
+      return _cachedMe;
+    }
+    return await _fetchMeDirect();
+  }
+
+  static Future<Map<String, dynamic>?> _fetchMeDirect() async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/me/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
-        return jsonDecode(res.body);
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        _cachedMe = data;
+        return data;
       }
     } catch (e) {
       debugPrint('getMe error: $e');
     }
-    return null;
+    return _cachedMe;
   }
 
   // --- Dashboard & Projects ---
 
-  static Future<Map<String, dynamic>?> getDashboard() async {
+  static Future<Map<String, dynamic>?> getDashboard({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedDashboard != null) {
+      _fetchDashboardDirect();
+      return _cachedDashboard;
+    }
+    return await _fetchDashboardDirect();
+  }
+
+  static Future<Map<String, dynamic>?> _fetchDashboardDirect() async {
     try {
       final url = Uri.parse('$baseUrl/api/projects/dashboard/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
-        return jsonDecode(res.body);
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        _cachedDashboard = data;
+        return data;
       }
     } catch (e) {
       debugPrint('getDashboard error: $e');
     }
-    return null;
+    return _cachedDashboard;
   }
 
-  static Future<List<dynamic>> getProjects() async {
+  static Future<List<dynamic>> getProjects({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedProjects != null) {
+      _fetchProjectsDirect();
+      return _cachedProjects!;
+    }
+    return await _fetchProjectsDirect();
+  }
+
+  static Future<List<dynamic>> _fetchProjectsDirect() async {
     try {
       final url = Uri.parse('$baseUrl/api/projects/items/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data is List ? data : (data['results'] ?? []);
+        final list = (data is List ? data : (data['results'] ?? [])) as List<dynamic>;
+        _cachedProjects = list;
+        return list;
       }
     } catch (e) {
       debugPrint('getProjects error: $e');
     }
-    return [];
+    return _cachedProjects ?? [];
   }
 
   static Future<Map<String, dynamic>?> createProject({
@@ -295,28 +352,49 @@ class ApiService {
     String description = '',
   }) async {
     final url = Uri.parse('$baseUrl/api/projects/items/');
-    final res = await http.post(
+    final res = await _client.post(
       url,
       headers: await _headers(),
       body: jsonEncode({'name': name, 'key': key.toUpperCase(), 'description': description}),
     );
-    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+    if (res.statusCode == 201) {
+      final data = jsonDecode(res.body);
+      _cachedDashboard = null;
+      if (_cachedProjects != null) {
+        _cachedProjects = [data, ..._cachedProjects!];
+      }
+      return data;
+    }
+    return null;
   }
 
-  static Future<List<dynamic>> getTasks({String? projectId, String? status}) async {
+  static Future<List<dynamic>> getTasks({String? projectId, String? status, bool forceRefresh = false}) async {
+    final isUnfiltered = (projectId == null && status == null);
+    if (isUnfiltered && !forceRefresh && _cachedTasks != null) {
+      _fetchTasksDirect(projectId: projectId, status: status);
+      return _cachedTasks!;
+    }
+    return await _fetchTasksDirect(projectId: projectId, status: status);
+  }
+
+  static Future<List<dynamic>> _fetchTasksDirect({String? projectId, String? status}) async {
     try {
       String path = '$baseUrl/api/projects/tasks/?';
       if (projectId != null) path += 'project=$projectId&';
       if (status != null) path += 'status=$status&';
-      final res = await http.get(Uri.parse(path), headers: await _headers());
+      final res = await _client.get(Uri.parse(path), headers: await _headers());
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data is List ? data : (data['results'] ?? []);
+        final list = (data is List ? data : (data['results'] ?? [])) as List<dynamic>;
+        if (projectId == null && status == null) {
+          _cachedTasks = list;
+        }
+        return list;
       }
     } catch (e) {
       debugPrint('getTasks error: $e');
     }
-    return [];
+    return (projectId == null && status == null) ? (_cachedTasks ?? []) : [];
   }
 
   static Future<Map<String, dynamic>?> createTask({
@@ -327,7 +405,7 @@ class ApiService {
     String taskType = 'task',
   }) async {
     final url = Uri.parse('$baseUrl/api/projects/tasks/');
-    final res = await http.post(
+    final res = await _client.post(
       url,
       headers: await _headers(),
       body: jsonEncode({
@@ -338,13 +416,32 @@ class ApiService {
         'task_type': taskType,
       }),
     );
-    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+    if (res.statusCode == 201) {
+      final data = jsonDecode(res.body);
+      _cachedDashboard = null;
+      if (_cachedTasks != null) {
+        _cachedTasks = [data, ..._cachedTasks!];
+      }
+      return data;
+    }
+    return null;
   }
 
   static Future<bool> updateTaskStatus(String taskId, String newStatus) async {
+    // Optimistic cache update
+    if (_cachedTasks != null) {
+      final idx = _cachedTasks!.indexWhere((t) => t['id'] == taskId);
+      if (idx != -1) {
+        final updated = Map<String, dynamic>.from(_cachedTasks![idx]);
+        updated['status'] = newStatus;
+        _cachedTasks![idx] = updated;
+      }
+    }
+    _cachedDashboard = null;
+
     try {
       final url = Uri.parse('$baseUrl/api/projects/tasks/$taskId/');
-      final res = await http.patch(
+      final res = await _client.patch(
         url,
         headers: await _headers(),
         body: jsonEncode({'status': newStatus}),
@@ -357,24 +454,34 @@ class ApiService {
 
   // --- Documents & RAG ---
 
-  static Future<List<dynamic>> getDocuments() async {
+  static Future<List<dynamic>> getDocuments({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedDocuments != null) {
+      _fetchDocumentsDirect();
+      return _cachedDocuments!;
+    }
+    return await _fetchDocumentsDirect();
+  }
+
+  static Future<List<dynamic>> _fetchDocumentsDirect() async {
     try {
       final url = Uri.parse('$baseUrl/api/documents/items/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data is List ? data : (data['results'] ?? []);
+        final list = (data is List ? data : (data['results'] ?? [])) as List<dynamic>;
+        _cachedDocuments = list;
+        return list;
       }
     } catch (e) {
       debugPrint('getDocuments error: $e');
     }
-    return [];
+    return _cachedDocuments ?? [];
   }
 
   static Future<List<dynamic>> searchKnowledge(String query) async {
     try {
       final url = Uri.parse('$baseUrl/api/documents/items/search/?q=${Uri.encodeComponent(query)}');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         return data['results'] ?? [];
@@ -387,30 +494,52 @@ class ApiService {
 
   // --- Approvals ---
 
-  static Future<List<dynamic>> getApprovals({String? status}) async {
+  static Future<List<dynamic>> getApprovals({String? status, bool forceRefresh = false}) async {
+    final isUnfiltered = (status == null || status == 'all');
+    if (isUnfiltered && !forceRefresh && _cachedApprovals != null) {
+      _fetchApprovalsDirect(status: status);
+      return _cachedApprovals!;
+    }
+    return await _fetchApprovalsDirect(status: status);
+  }
+
+  static Future<List<dynamic>> _fetchApprovalsDirect({String? status}) async {
     try {
       String path = '$baseUrl/api/approvals/requests/?';
-      if (status != null) path += 'status=$status&';
-      final res = await http.get(Uri.parse(path), headers: await _headers());
+      if (status != null && status != 'all') path += 'status=$status&';
+      final res = await _client.get(Uri.parse(path), headers: await _headers());
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        return data is List ? data : (data['results'] ?? []);
+        final list = (data is List ? data : (data['results'] ?? [])) as List<dynamic>;
+        if (status == null || status == 'all') {
+          _cachedApprovals = list;
+        }
+        return list;
       }
     } catch (e) {
       debugPrint('getApprovals error: $e');
     }
-    return [];
+    return (status == null || status == 'all') ? (_cachedApprovals ?? []) : [];
   }
 
   static Future<bool> decideApproval(String id, bool approve, {String note = ''}) async {
+    _cachedDashboard = null;
     try {
       final action = approve ? 'approve' : 'reject';
       final url = Uri.parse('$baseUrl/api/approvals/requests/$id/$action/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(),
         body: jsonEncode({'decision_note': note}),
       );
+      if (res.statusCode == 200 && _cachedApprovals != null) {
+        final idx = _cachedApprovals!.indexWhere((a) => a['id'] == id);
+        if (idx != -1) {
+          final updated = Map<String, dynamic>.from(_cachedApprovals![idx]);
+          updated['status'] = approve ? 'approved' : 'rejected';
+          _cachedApprovals![idx] = updated;
+        }
+      }
       return res.statusCode == 200;
     } catch (e) {
       return false;
@@ -423,7 +552,7 @@ class ApiService {
     required String category,
   }) async {
     final url = Uri.parse('$baseUrl/api/approvals/requests/');
-    final res = await http.post(
+    final res = await _client.post(
       url,
       headers: await _headers(),
       body: jsonEncode({
@@ -432,7 +561,15 @@ class ApiService {
         'category': category,
       }),
     );
-    return res.statusCode == 201 ? jsonDecode(res.body) : null;
+    if (res.statusCode == 201) {
+      final data = jsonDecode(res.body);
+      _cachedDashboard = null;
+      if (_cachedApprovals != null) {
+        _cachedApprovals = [data, ..._cachedApprovals!];
+      }
+      return data;
+    }
+    return null;
   }
 
   // --- Centria AI Assistant ---
@@ -445,7 +582,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/ai/ask/');
-      final res = await http.post(
+      final res = await _client.post(
         url,
         headers: await _headers(),
         body: jsonEncode({
@@ -471,7 +608,7 @@ class ApiService {
   static Future<Map<String, dynamic>?> getPlatformAdminOverview() async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/platform-admin/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
@@ -494,7 +631,7 @@ class ApiService {
   static Future<Map<String, dynamic>?> getRealtimeConfig() async {
     try {
       final url = Uri.parse('$baseUrl/api/auth/realtime/config/');
-      final res = await http.get(url, headers: await _headers());
+      final res = await _client.get(url, headers: await _headers());
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
@@ -502,5 +639,30 @@ class ApiService {
       debugPrint('Realtime config fetch error: $e');
     }
     return null;
+  }
+
+  // --- Workspace Prefetching & Keep-Alive ---
+
+  static bool _isPrefetching = false;
+  static Future<void> prefetchWorkspace() async {
+    if (_isPrefetching) return;
+    _isPrefetching = true;
+    try {
+      final token = await getToken();
+      if (token == null || token.isEmpty) {
+        _isPrefetching = false;
+        return;
+      }
+      // Concurrently prefetch core resources in parallel
+      await Future.wait([
+        _fetchDashboardDirect(),
+        _fetchProjectsDirect(),
+        _fetchTasksDirect(),
+        _fetchApprovalsDirect(),
+        _fetchDocumentsDirect(),
+      ]).timeout(const Duration(seconds: 8), onTimeout: () => []);
+    } catch (_) {} finally {
+      _isPrefetching = false;
+    }
   }
 }

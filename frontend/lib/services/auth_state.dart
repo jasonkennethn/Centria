@@ -37,6 +37,7 @@ class AuthState extends ChangeNotifier {
 
     final token = await ApiService.getToken();
     if (token != null) {
+      ApiService.prefetchWorkspace();
       final me = await ApiService.getMe();
       if (me != null) {
         _user = me;
@@ -52,6 +53,7 @@ class AuthState extends ChangeNotifier {
     final res = await ApiService.login(email, password);
     if (res['success']) {
       _user = res['data']['user'];
+      ApiService.prefetchWorkspace();
       RealtimeService.instance.connect();
       notifyListeners();
     }

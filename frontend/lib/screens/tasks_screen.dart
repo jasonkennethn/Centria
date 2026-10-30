@@ -29,7 +29,9 @@ class _TasksScreenState extends State<TasksScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    _tasks = ApiService.cachedTasks ?? [];
+    _isLoading = _tasks.isEmpty;
+    _loadTasks(showLoading: _isLoading);
     _subscribeRealtime();
   }
 
@@ -177,32 +179,35 @@ class _TasksScreenState extends State<TasksScreen> {
                         Text('Tasks & Issues', style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
                         ValueListenableBuilder<bool>(
                           valueListenable: RealtimeService.instance.isConnected,
-                          builder: (ctx, connected, _) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: connected ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: connected ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00),
+                          builder: (ctx, connected, _) {
+                            if (!connected) return const SizedBox.shrink();
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFA5D6A7)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFF2E7D32),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  connected ? 'Live Synced' : 'Connecting...',
-                                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: connected ? const Color(0xFF2E7D32) : const Color(0xFFEF6C00)),
-                                ),
-                              ],
-                            ),
-                          ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Live Synced',
+                                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF2E7D32)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

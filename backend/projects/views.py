@@ -47,7 +47,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if not self.request.company:
             return Task.objects.none()
-        qs = Task.objects.filter(company=self.request.company).select_related('project', 'assignee', 'creator')
+        qs = Task.objects.filter(company=self.request.company).select_related('project', 'assignee', 'creator').prefetch_related('comments__author')
         
         project_id = self.request.query_params.get('project')
         if project_id:
@@ -143,6 +143,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
         )
 
 
+from django.core.cache import cache
+
+
 class DashboardMyDayView(views.APIView):
     """Aggregates workspace metrics, next steps, and pending approvals for My Day dashboard."""
     permission_classes = [permissions.IsAuthenticated]
@@ -153,19 +156,34 @@ class DashboardMyDayView(views.APIView):
         if not company:
             return Response({'error': 'No company active'}, status=status.HTTP_400_BAD_REQUEST)
 
+        cache_key = f"dash_my_day_{company.id}_{user.id}"
+        cached_payload = cache.get(cache_key)
+        if cached_payload is not None:
+            return Response(cached_payload)
+
+        # Single aggregate query for task metrics
+        task_stats = Task.objects.filter(company=company).aggregate(
+            open_count=Count('id', filter=~Q(status='done')),
+            urgent_count=Count('id', filter=Q(priority__in=['high', 'urgent']) & ~Q(status='done')),
+        )
+        total_open_tasks = task_stats['open_count'] or 0
+        urgent_tasks_count = task_stats['urgent_count'] or 0
+
         active_projects_count = Project.objects.filter(company=company, status='active').count()
-        total_open_tasks = Task.objects.filter(company=company).exclude(status='done').count()
-        urgent_tasks_count = Task.objects.filter(company=company, priority__in=['high', 'urgent']).exclude(status='done').count()
         pending_approvals_count = ApprovalRequest.objects.filter(company=company, status='pending').count()
 
-        # My Next Steps (assigned to me and not done)
+        # My Next Steps (assigned to me and not done) with full relation prefetching
         my_tasks = Task.objects.filter(
             company=company,
             assignee=user
-        ).exclude(status='done').order_by('due_date', '-created_at')[:5]
+        ).exclude(status='done').select_related(
+            'project', 'assignee', 'creator'
+        ).prefetch_related(
+            'comments__author'
+        ).order_by('due_date', '-created_at')[:5]
 
-        # Recent activities
-        recent_logs = AuditLog.objects.filter(company=company).order_by('-timestamp')[:8]
+        # Recent activities with user relation selected
+        recent_logs = AuditLog.objects.filter(company=company).select_related('user').order_by('-timestamp')[:8]
         activity_items = [{
             'id': str(log.id),
             'action': log.action,
@@ -174,7 +192,7 @@ class DashboardMyDayView(views.APIView):
             'timestamp': log.timestamp.isoformat(),
         } for log in recent_logs]
 
-        return Response({
+        payload = {
             'workspace_name': company.name,
             'user_name': user.full_name,
             'metrics': {
@@ -185,4 +203,8 @@ class DashboardMyDayView(views.APIView):
             },
             'next_steps': TaskSerializer(my_tasks, many=True).data,
             'recent_activity': activity_items,
-        })
+        }
+
+        # Cache for 10 seconds to make quick tab navigations instant
+        cache.set(cache_key, payload, timeout=10)
+        return Response(payload)

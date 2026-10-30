@@ -21,11 +21,13 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDocuments();
+    _documents = ApiService.cachedDocuments ?? [];
+    _isLoading = _documents.isEmpty;
+    _loadDocuments(showLoading: _isLoading);
   }
 
-  Future<void> _loadDocuments() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadDocuments({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isLoading = true);
     final docs = await ApiService.getDocuments();
     if (mounted) {
       setState(() {

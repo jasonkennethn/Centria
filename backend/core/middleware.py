@@ -25,7 +25,15 @@ class CompanyIsolationMiddleware(MiddlewareMixin):
                 raw_token = self.jwt_auth.get_raw_token(header)
                 if raw_token is not None:
                     validated_token = self.jwt_auth.get_validated_token(raw_token)
-                    request.user = self.jwt_auth.get_user(validated_token)
+                    user_id = validated_token.get('user_id')
+                    if user_id:
+                        from core.models import User
+                        user = User.objects.select_related('company', 'role').filter(id=user_id).first()
+                        if user is None:
+                            return JsonResponse({'detail': 'User not found.', 'code': 'user_not_found'}, status=401)
+                        request.user = user
+                    else:
+                        request.user = self.jwt_auth.get_user(validated_token)
                     request.auth = validated_token
             except Exception:
                 # Do not silently swallow JWT errors when an Authorization header was explicitly provided.

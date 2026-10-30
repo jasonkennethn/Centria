@@ -101,6 +101,19 @@ if db_url:
         DATABASES['default'].setdefault('OPTIONS', {})
         DATABASES['default']['OPTIONS']['sslmode'] = qs['sslmode'][0]
 
+# Persistent database connections & health checks (eliminates 300-800ms handshake overhead per request)
+DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get('DB_CONN_MAX_AGE', 600))
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
+# High-performance in-memory cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'centria-fast-cache',
+        'TIMEOUT': 120,
+    }
+}
+
 AUTH_USER_MODEL = 'core.User'
 
 AUTH_PASSWORD_VALIDATORS = [

@@ -18,11 +18,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProjects();
+    _projects = ApiService.cachedProjects ?? [];
+    _isLoading = _projects.isEmpty;
+    _loadProjects(showLoading: _isLoading);
   }
 
-  Future<void> _loadProjects() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadProjects({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isLoading = true);
     final projects = await ApiService.getProjects();
     if (mounted) {
       setState(() {
