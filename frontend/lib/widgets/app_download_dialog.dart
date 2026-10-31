@@ -122,13 +122,13 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.86),
                     borderRadius: BorderRadius.circular(24),
@@ -155,8 +155,8 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Container(
-                          width: 38,
-                          height: 38,
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             color: AppColors.teal,
                             borderRadius: BorderRadius.circular(10),
@@ -165,7 +165,7 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                             child: Icon(
                               isAndroid ? Icons.android : Icons.apple,
                               color: Colors.white,
-                              size: 22,
+                              size: 18,
                             ),
                           ),
                         ),
@@ -250,8 +250,8 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                           backgroundColor: AppColors.teal,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          minimumSize: const Size(0, 34),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          minimumSize: const Size(0, 28),
                           shape: const StadiumBorder(),
                         ),
                         child: _downloading
@@ -285,10 +285,10 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                         onTap: () => setState(() => _dismissed = true),
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(4),
                           child: const Icon(
                             Icons.close_rounded,
-                            size: 16,
+                            size: 14,
                             color: AppColors.muted,
                           ),
                         ),

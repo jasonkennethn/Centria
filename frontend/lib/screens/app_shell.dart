@@ -221,9 +221,9 @@ class _AppShellState extends State<AppShell> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                   child: AppBar(
-                    backgroundColor: Colors.white.withValues(alpha: 0.65),
+                    backgroundColor: Colors.white.withValues(alpha: 0.72),
                     elevation: 0,
-                    centerTitle: true,
+                    centerTitle: false,
                     title: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -311,9 +311,9 @@ class _AppShellState extends State<AppShell> {
             filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
               height: 64,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.65),
+                color: Colors.white.withValues(alpha: 0.72),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withValues(alpha: 0.8),
@@ -482,7 +482,7 @@ class _AppShellState extends State<AppShell> {
               Text('Centria', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: AppColors.ink)),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
           // Workspace Card
           Container(
@@ -509,11 +509,11 @@ class _AppShellState extends State<AppShell> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 10),
 
           // Navigation Links
           Text('WORKSPACE', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.8)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
 
           _navItem(0, 'My Day', Icons.calendar_today_outlined),
           _navItem(1, 'Projects', Icons.folder_outlined),
@@ -522,9 +522,9 @@ class _AppShellState extends State<AppShell> {
           _navItem(4, 'Approvals', Icons.verified_user_outlined),
 
           if (isSuper) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 10),
             Text('PLATFORM', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.teal, letterSpacing: 0.8)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             _navItem(5, 'Platform Admin', Icons.admin_panel_settings_outlined),
           ],
 
@@ -577,7 +577,7 @@ class _AppShellState extends State<AppShell> {
           ),
         ),
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         onTap: () {
           setState(() => _currentIndex = index);
           if (MediaQuery.of(context).size.width < 860) {
