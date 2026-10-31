@@ -219,9 +219,9 @@ class _AppShellState extends State<AppShell> {
               preferredSize: const Size.fromHeight(56),
               child: ClipRRect(
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                   child: AppBar(
-                    backgroundColor: Colors.white.withValues(alpha: 0.82),
+                    backgroundColor: Colors.white.withValues(alpha: 0.65),
                     elevation: 0,
                     centerTitle: true,
                     title: Row(
@@ -308,18 +308,25 @@ class _AppShellState extends State<AppShell> {
         final compact = constraints.maxWidth < 650;
         return ClipRRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
             child: Container(
               height: 64,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.82),
+                color: Colors.white.withValues(alpha: 0.65),
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: Colors.white.withValues(alpha: 0.8),
                     width: 1,
                   ),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

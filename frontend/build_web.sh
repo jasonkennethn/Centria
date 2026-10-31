@@ -48,6 +48,8 @@ if [ -f "build/web/assets/fonts/MaterialIcons-Regular.otf" ]; then
             cp -f "$sdk_font" "build/web/assets/fonts/MaterialIcons-Regular.otf"
         fi
     fi
+    mkdir -p build/web/fonts
+    cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/fonts/MaterialIcons-Regular.otf" 2>/dev/null || true
 fi
 
 echo "✓ Production WebAssembly (Wasm + Skwasm) build complete: build/web/"

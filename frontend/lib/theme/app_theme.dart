@@ -33,20 +33,25 @@ class AppleGlass {
     bool glow = false,
   }) {
     return BoxDecoration(
-      color: color ?? Colors.white.withValues(alpha: 0.78),
+      color: color ?? Colors.white.withValues(alpha: 0.62),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: borderColor ?? Colors.white.withValues(alpha: 0.9),
+        color: borderColor ?? Colors.white.withValues(alpha: 0.75),
         width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
           color: glow
-              ? AppColors.teal.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.04),
-          blurRadius: 28,
-          offset: const Offset(0, 8),
+              ? AppColors.teal.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.05),
+          blurRadius: 32,
+          offset: const Offset(0, 10),
           spreadRadius: 0,
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.5),
+          blurRadius: 1,
+          offset: const Offset(0, 1),
         ),
       ],
     );
@@ -55,17 +60,17 @@ class AppleGlass {
   /// Dark / Ambient glass decoration for pills and floating controls
   static BoxDecoration darkPill({double radius = 999}) {
     return BoxDecoration(
-      color: const Color(0xFF162A24).withValues(alpha: 0.88),
+      color: const Color(0xFF14241F).withValues(alpha: 0.75),
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: Colors.white.withValues(alpha: 0.22),
         width: 1.0,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.18),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
+          color: Colors.black.withValues(alpha: 0.22),
+          blurRadius: 28,
+          offset: const Offset(0, 10),
         ),
       ],
     );
@@ -210,16 +215,16 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.ink),
       ),
       cardTheme: CardThemeData(
-        color: Colors.white.withValues(alpha: 0.82),
+        color: Colors.white.withValues(alpha: 0.65),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.9)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.75), width: 1.2),
           borderRadius: BorderRadius.circular(22),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.88),
+        fillColor: Colors.white.withValues(alpha: 0.60),
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

@@ -5,6 +5,7 @@ import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/auth_state.dart';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/widgets/app_download_dialog.dart';
+import 'package:centria/widgets/brand_icons.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -33,7 +34,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
   void _openAuthModal({bool isSignUp = false}) {
     showDialog(
       context: context,
-      barrierColor: AppColors.ink.withValues(alpha: 0.55),
+      barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (context) => _AuthModalDialog(initialSignUp: isSignUp),
     );
   }
@@ -70,36 +71,37 @@ class _HomepageScreenState extends State<HomepageScreen> {
       backgroundColor: AppColors.paper,
       body: Stack(
         children: [
-          Column(
-            children: [
-              // 1. Locked Navigation Bar (Sticky at top)
-              _buildHeader(isMobile),
-
-              // 2. Scrollable Body Content
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Column(
-                    children: [
-                      _buildHero(isMobile, width),
-                      _buildTrustStrip(isMobile),
-                      _buildFeatures(isMobile),
-                      _buildWorkflowSection(isMobile),
-                      _buildAudienceSection(isMobile),
-                      _buildAiSection(isMobile),
-                      _buildIntegrationsSection(isMobile),
-                      _buildSecuritySection(isMobile),
-                      _buildPricingSection(isMobile),
-                      _buildFaqSection(isMobile),
-                      _buildCtaBanner(isMobile),
-                      _buildFooter(isMobile),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          // 1. Scrollable Body Content (flows seamlessly underneath the sticky glass header)
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                const SizedBox(height: 74), // Spacing for initial top header
+                _buildHero(isMobile, width),
+                _buildTrustStrip(isMobile),
+                _buildFeatures(isMobile),
+                _buildWorkflowSection(isMobile),
+                _buildAudienceSection(isMobile),
+                _buildAiSection(isMobile),
+                _buildIntegrationsSection(isMobile),
+                _buildSecuritySection(isMobile),
+                _buildPricingSection(isMobile),
+                _buildFaqSection(isMobile),
+                _buildCtaBanner(isMobile),
+                _buildFooter(isMobile),
+              ],
+            ),
           ),
-          // Hovering Mobile App Download Dialog (Android / iOS only)
+
+          // 2. Sticky Glass Navigation Bar pinned at top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _buildHeader(isMobile),
+          ),
+
+          // 3. Hovering Mobile App Download Dialog (Android / iOS only)
           const Positioned(
             bottom: 0,
             left: 0,
@@ -115,18 +117,23 @@ class _HomepageScreenState extends State<HomepageScreen> {
   Widget _buildHeader(bool isMobile) {
     return ClipRRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
         child: Container(
           height: 74,
           padding: const EdgeInsets.symmetric(horizontal: 24),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.82),
-            border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06), width: 1)),
+            color: Colors.white.withValues(alpha: 0.65),
+            border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.8), width: 1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 20,
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 24,
                 offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.6),
+                blurRadius: 1,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
@@ -256,6 +263,18 @@ class _HomepageScreenState extends State<HomepageScreen> {
   // --- 3. Hero Section ---
   Widget _buildHero(bool isMobile, double screenWidth) {
     return Container(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(0.7, -0.5),
+          radius: 1.2,
+          colors: [
+            AppColors.teal.withValues(alpha: 0.08),
+            AppColors.lime.withValues(alpha: 0.04),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.45, 1.0],
+        ),
+      ),
       padding: EdgeInsets.symmetric(vertical: isMobile ? 48 : 80, horizontal: 24),
       child: Center(
         child: ConstrainedBox(
@@ -913,7 +932,19 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
     return Container(
       key: _productKey,
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        gradient: RadialGradient(
+          center: const Alignment(-0.8, -0.2),
+          radius: 1.4,
+          colors: [
+            AppColors.violet.withValues(alpha: 0.05),
+            AppColors.teal.withValues(alpha: 0.03),
+            Colors.white,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+      ),
       padding: EdgeInsets.symmetric(vertical: isMobile ? 64 : 96, horizontal: 24),
       child: Center(
         child: ConstrainedBox(
@@ -946,34 +977,42 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 380),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(22),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.78),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(22),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.65),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 1.2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.04),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: (f['color'] as Color).withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
-                                ),
-                                const Spacer(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: (f['color'] as Color).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Center(
+                                        child: (f['title'] == 'GitHub Connected')
+                                            ? BrandIcons.github(size: 20, color: f['color'] as Color)
+                                            : Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
+                                      ),
+                                    ),
+                                    const Spacer(),
                                 Text(f['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
                                 const SizedBox(height: 6),
                                 Text(f['desc'] as String, style: GoogleFonts.inter(fontSize: 12, height: 1.45, color: const Color(0xFF5D6E63))),
@@ -981,8 +1020,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             ),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ),
+                  );
+                },
                   );
                 },
               ),
@@ -1430,10 +1471,23 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       child: Row(
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.line)),
-                            child: Center(child: Text(it['name']!.substring(0, 1), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal))),
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.line),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: _getIntegrationIcon(it['name']!),
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -1462,6 +1516,19 @@ class _HomepageScreenState extends State<HomepageScreen> {
         ),
       ),
     );
+  }
+
+  Widget _getIntegrationIcon(String name) {
+    if (name.contains('GitHub')) {
+      return BrandIcons.github(size: 20);
+    } else if (name.contains('NeonDB')) {
+      return BrandIcons.neonDb(size: 20);
+    } else if (name.contains('S3') || name.contains('Cloud')) {
+      return BrandIcons.cloudStorage(size: 20);
+    } else if (name.contains('Brevo')) {
+      return BrandIcons.brevo(size: 20);
+    }
+    return const Icon(Icons.extension_outlined, size: 20, color: AppColors.teal);
   }
 
   // --- 10. Security & Privacy Section ---
@@ -2111,28 +2178,39 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(32),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(28),
+                color: Colors.white.withValues(alpha: 0.70),
+                borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  width: 1.2,
+                  color: Colors.white.withValues(alpha: 0.85),
+                  width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.10),
-                    blurRadius: 36,
-                    offset: const Offset(0, 12),
+                    color: Colors.black.withValues(alpha: 0.16),
+                    blurRadius: 48,
+                    offset: const Offset(0, 18),
+                  ),
+                  BoxShadow(
+                    color: AppColors.teal.withValues(alpha: 0.12),
+                    blurRadius: 50,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -6,
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    blurRadius: 1,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),

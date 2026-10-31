@@ -133,18 +133,23 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 1.2),
+            color: Colors.white.withValues(alpha: 0.72),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 36,
-                offset: const Offset(0, -6),
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 40,
+                offset: const Offset(0, -10),
+              ),
+              BoxShadow(
+                color: AppColors.violet.withValues(alpha: 0.08),
+                blurRadius: 30,
+                offset: const Offset(0, -2),
               ),
             ],
           ),
