@@ -2152,11 +2152,15 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
               if (_isSignUp) ...[
                 TextField(
                   controller: _companyNameController,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: const InputDecoration(labelText: 'Company / Workspace Name', hintText: 'Acme Studio'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _fullNameController,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: const InputDecoration(labelText: 'Your Full Name', hintText: 'Jane Doe'),
                 ),
                 const SizedBox(height: 12),
@@ -2166,6 +2170,14 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: (_isForgotPassword && !_otpSent) ? TextInputAction.done : TextInputAction.next,
+                  onSubmitted: (_) {
+                    if (_isForgotPassword && !_otpSent) {
+                      if (!_isLoading) _handleSubmit();
+                    } else {
+                      FocusScope.of(context).nextFocus();
+                    }
+                  },
                   decoration: const InputDecoration(labelText: 'Work Email', hintText: 'you@company.com'),
                 ),
                 const SizedBox(height: 12),
@@ -2175,6 +2187,10 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!_isLoading) _handleSubmit();
+                  },
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: '••••••••',
@@ -2214,12 +2230,16 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 TextField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: const InputDecoration(labelText: '6-digit OTP Code', hintText: '123456'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _newPasswordController,
                   obscureText: _obscureNewPassword,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: InputDecoration(
                     labelText: 'New Password',
                     hintText: 'At least 8 characters',
@@ -2240,6 +2260,10 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 TextField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!_isLoading) _handleSubmit();
+                  },
                   decoration: InputDecoration(
                     labelText: 'Re-type New Password',
                     hintText: 'Confirm your new password',
