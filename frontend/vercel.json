@@ -1,6 +1,6 @@
 {
   "installCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter; fi",
-  "buildCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter; fi && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter build web --release",
+  "buildCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter; fi && export PATH=\"$PWD/flutter/bin:$PATH\" && flutter build web --wasm && (cp -u assets/centria_v* build/web/ 2>/dev/null || true) && (cp -u assets/centria_v* build/web/assets/ 2>/dev/null || true)",
   "outputDirectory": "build/web",
   "cleanUrls": true,
   "rewrites": [
@@ -13,6 +13,14 @@
     {
       "source": "/(.*)",
       "headers": [
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "credentialless"
+        },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"

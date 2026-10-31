@@ -17,6 +17,13 @@ fi
 
 echo "Using Flutter: $(which flutter)"
 flutter --version
-flutter build web --release
+flutter build web --wasm
 
-echo "✓ Production web build complete: build/web/"
+# Ensure mobile release assets are present in web output root & assets
+if [ -d "assets" ]; then
+    mkdir -p build/web/assets
+    cp -u assets/centria_v* build/web/ 2>/dev/null || true
+    cp -u assets/centria_v* build/web/assets/ 2>/dev/null || true
+fi
+
+echo "✓ Production WebAssembly (Wasm + Skwasm) build complete: build/web/"

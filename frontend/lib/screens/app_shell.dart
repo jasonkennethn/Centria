@@ -13,6 +13,7 @@ import 'package:centria/widgets/ai_assistant_sheet.dart';
 import 'dart:async';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/services/realtime_service.dart';
+import 'package:centria/widgets/app_download_dialog.dart';
 
 class AppShell extends StatefulWidget {
   final int initialIndex;
@@ -218,21 +219,20 @@ class _AppShellState extends State<AppShell> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
                       'assets/images/logo.png',
-                      width: 22,
-                      height: 22,
+                      width: 32,
+                      height: 32,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(6)),
-                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold))),
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
+                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
                 ],
               ),
@@ -253,20 +253,30 @@ class _AppShellState extends State<AppShell> {
           )
         : null,
       drawer: isMobile ? Drawer(child: _buildSidebar(auth, isSuper)) : null,
-      body: Row(
+      body: Stack(
         children: [
-          if (!isMobile)
-            SizedBox(
-              width: 240,
-              child: _buildSidebar(auth, isSuper),
-            ),
-          Expanded(
-            child: Column(
-              children: [
-                if (!isMobile) _buildTopBar(auth),
-                Expanded(child: screens[_currentIndex.clamp(0, screens.length - 1)]),
-              ],
-            ),
+          Row(
+            children: [
+              if (!isMobile)
+                SizedBox(
+                  width: 240,
+                  child: _buildSidebar(auth, isSuper),
+                ),
+              Expanded(
+                child: Column(
+                  children: [
+                    if (!isMobile) _buildTopBar(auth),
+                    Expanded(child: screens[_currentIndex.clamp(0, screens.length - 1)]),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: AppDownloadHoverDialog(),
           ),
         ],
       ),
@@ -418,21 +428,20 @@ class _AppShellState extends State<AppShell> {
           Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
                   'assets/images/logo.png',
-                  width: 30,
-                  height: 30,
+                  width: 38,
+                  height: 38,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(9)),
-                    child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(10)),
+                    child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 22, fontWeight: FontWeight.bold))),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               Text('Centria', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -1.0, color: AppColors.ink)),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/screens/splash_screen.dart';
@@ -7,6 +8,8 @@ import 'package:centria/screens/app_shell.dart';
 import 'package:centria/services/auth_state.dart';
 
 void main() async {
+  // Use path URL strategy for clean URLs (e.g. site.com/dashboard instead of site.com/#/dashboard)
+  usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final hasSeenSplash = prefs.getBool('centria_has_seen_splash') ?? false;

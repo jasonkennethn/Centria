@@ -70,26 +70,25 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             // Centria Logo
             ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: Image.asset(
                 'assets/images/logo.png',
-                width: 72,
-                height: 72,
+                width: 92,
+                height: 92,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  width: 72,
-                  height: 72,
+                  width: 92,
+                  height: 92,
                   decoration: BoxDecoration(
                     color: AppColors.teal,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Center(
-                    child: Text('C', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                    child: Text('C', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            // Centria Name
+            // Centria Name (no space between logo and name)
             Text(
               'Centria',
               style: GoogleFonts.inter(

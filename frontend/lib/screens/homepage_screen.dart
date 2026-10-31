@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/auth_state.dart';
 import 'package:centria/services/api_service.dart';
+import 'package:centria/widgets/app_download_dialog.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -66,32 +67,43 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.paper,
-      body: Column(
+      body: Stack(
         children: [
-          // 1. Locked Navigation Bar (Sticky at top)
-          _buildHeader(isMobile),
+          Column(
+            children: [
+              // 1. Locked Navigation Bar (Sticky at top)
+              _buildHeader(isMobile),
 
-          // 2. Scrollable Body Content
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  _buildHero(isMobile, width),
-                  _buildTrustStrip(isMobile),
-                  _buildFeatures(isMobile),
-                  _buildWorkflowSection(isMobile),
-                  _buildAudienceSection(isMobile),
-                  _buildAiSection(isMobile),
-                  _buildIntegrationsSection(isMobile),
-                  _buildSecuritySection(isMobile),
-                  _buildPricingSection(isMobile),
-                  _buildFaqSection(isMobile),
-                  _buildCtaBanner(isMobile),
-                  _buildFooter(isMobile),
-                ],
+              // 2. Scrollable Body Content
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    children: [
+                      _buildHero(isMobile, width),
+                      _buildTrustStrip(isMobile),
+                      _buildFeatures(isMobile),
+                      _buildWorkflowSection(isMobile),
+                      _buildAudienceSection(isMobile),
+                      _buildAiSection(isMobile),
+                      _buildIntegrationsSection(isMobile),
+                      _buildSecuritySection(isMobile),
+                      _buildPricingSection(isMobile),
+                      _buildFaqSection(isMobile),
+                      _buildCtaBanner(isMobile),
+                      _buildFooter(isMobile),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
+          ),
+          // Hovering Mobile App Download Dialog (Android / iOS only)
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: AppDownloadHoverDialog(),
           ),
         ],
       ),
@@ -127,12 +139,12 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
                       'assets/images/logo.png',
-                      width: 32,
-                      height: 32,
+                      width: 40,
+                      height: 40,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
-                        width: 32,
-                        height: 32,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: AppColors.teal,
                           borderRadius: BorderRadius.circular(10),
@@ -141,12 +153,11 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           ],
                         ),
                         child: const Center(
-                          child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 20, fontWeight: FontWeight.w900)),
+                          child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 24, fontWeight: FontWeight.w900)),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
                   Text(
                     'Centria',
                     style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -1.2, color: AppColors.ink),
@@ -1766,18 +1777,17 @@ class _HomepageScreenState extends State<HomepageScreen> {
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/images/logo.png',
-                          width: 28,
-                          height: 28,
+                          width: 34,
+                          height: 34,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            width: 28,
-                            height: 28,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
-                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 20, fontWeight: FontWeight.bold))),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ],
                   ),
@@ -2000,18 +2010,17 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/images/logo.png',
-                          width: 26,
-                          height: 26,
+                          width: 34,
+                          height: 34,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            width: 26,
-                            height: 26,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
-                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 16, fontWeight: FontWeight.bold))),
+                            child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 20, fontWeight: FontWeight.bold))),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
                     ],
                   ),

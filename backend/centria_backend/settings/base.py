@@ -10,9 +10,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / '.env')
 
+import secrets
+
 SECRET_KEY = os.environ.get('SECRET_KEY', '')
-if not SECRET_KEY and (os.environ.get('DJANGO_SETTINGS_MODULE', '').endswith('.dev') or not os.environ.get('DJANGO_SETTINGS_MODULE')):
-    SECRET_KEY = 'django-insecure-centria-dev-only-secret-key-not-for-production'
+if not SECRET_KEY:
+    # Dynamically generate secure ephemeral key if not supplied in environment
+    SECRET_KEY = secrets.token_urlsafe(50)
 
 DEBUG = False
 ALLOWED_HOSTS = []

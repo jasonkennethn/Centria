@@ -134,6 +134,12 @@
     </div>
   </noscript>
 
+  <script>
+    // Configure Flutter Web to use WebAssembly (Wasm) with Skwasm renderer
+    window.flutterConfiguration = {
+      renderer: "skwasm"
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 
