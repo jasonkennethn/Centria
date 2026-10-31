@@ -1916,15 +1916,28 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
   final _confirmPasswordController = TextEditingController();
 
   bool _otpSent = false;
+  bool _obscurePassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
     super.initState();
     _isSignUp = widget.initialSignUp;
+    _passwordController.addListener(_onTextChanged);
+    _newPasswordController.addListener(_onTextChanged);
+    _confirmPasswordController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _passwordController.removeListener(_onTextChanged);
+    _newPasswordController.removeListener(_onTextChanged);
+    _confirmPasswordController.removeListener(_onTextChanged);
     _emailController.dispose();
     _passwordController.dispose();
     _fullNameController.dispose();
@@ -2161,8 +2174,22 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
               if (!_isForgotPassword) ...[
                 TextField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', hintText: '••••••••'),
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: '••••••••',
+                    suffixIcon: _passwordController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              size: 20,
+                              color: AppColors.muted,
+                            ),
+                            tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          )
+                        : null,
+                  ),
                 ),
                 // Forgot password button ONLY at sign in, never at create workspace
                 if (!_isSignUp) ...[
@@ -2192,14 +2219,42 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _newPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'New Password', hintText: 'At least 8 characters'),
+                  obscureText: _obscureNewPassword,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    hintText: 'At least 8 characters',
+                    suffixIcon: _newPasswordController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              _obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              size: 20,
+                              color: AppColors.muted,
+                            ),
+                            tooltip: _obscureNewPassword ? 'Show password' : 'Hide password',
+                            onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                          )
+                        : null,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Re-type New Password', hintText: 'Confirm your new password'),
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Re-type New Password',
+                    hintText: 'Confirm your new password',
+                    suffixIcon: _confirmPasswordController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              size: 20,
+                              color: AppColors.muted,
+                            ),
+                            tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
+                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          )
+                        : null,
+                  ),
                 ),
                 const SizedBox(height: 14),
               ],
