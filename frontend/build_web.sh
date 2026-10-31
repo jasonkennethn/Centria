@@ -6,6 +6,11 @@ echo "=========================================="
 echo " Building Centria Web for Production"
 echo "=========================================="
 
+# Include local flutter if present
+if [ -d "$HOME/flutter/bin" ]; then
+    export PATH="$HOME/flutter/bin:$PATH"
+fi
+
 # Ensure Flutter is available
 if ! command -v flutter &> /dev/null; then
     if [ ! -d "flutter" ]; then

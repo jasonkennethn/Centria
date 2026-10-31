@@ -136,25 +136,7 @@
     </div>
   </noscript>
 
-  <!-- Bootstrap Loading Indicator -->
-  <div id="loading" class="d-flex flex-column align-items-center justify-content-center" style="position:fixed;top:0;left:0;right:0;bottom:0;background-color:#f7f8f5;z-index:9999;transition:opacity 0.3s ease;">
-    <div class="spinner-border mb-3" style="width:3rem;height:3rem;color:#176B5D;" role="status">
-      <span class="visually-hidden">Loading Centria...</span>
-    </div>
-    <div class="h5 fw-bold text-dark mb-1" style="color:#182A27;">Centria</div>
-    <div class="text-secondary small">AI-Powered Company Operating System</div>
-  </div>
-  <script>
-    window.addEventListener('flutter-first-frame', function () {
-      var loader = document.getElementById('loading');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(function() { loader.remove(); }, 350);
-      }
-    });
-  </script>
-
-  {{flutter_bootstrap_js}}
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 
 </html>
