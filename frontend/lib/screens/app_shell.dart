@@ -11,6 +11,7 @@ import 'package:centria/screens/platform_admin_screen.dart';
 import 'package:centria/widgets/ai_assistant_sheet.dart';
 
 import 'dart:async';
+import 'dart:ui';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/services/realtime_service.dart';
 import 'package:centria/widgets/app_download_dialog.dart';
@@ -214,44 +215,54 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: isMobile
-          ? AppBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 32,
-                      height: 32,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
-                        child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
-                      ),
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(56),
+              child: ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: AppBar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.82),
+                    elevation: 0,
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(color: AppColors.teal, borderRadius: BorderRadius.circular(8)),
+                              child: const Center(child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 18, fontWeight: FontWeight.bold))),
+                            ),
+                          ),
+                        ),
+                        Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
+                      ],
                     ),
+                    actions: [
+                      IconButton(
+                        icon: Badge(
+                          isLabelVisible: _unreadNotifs > 0,
+                          label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
+                          child: const Icon(Icons.notifications_outlined),
+                        ),
+                        onPressed: _openNotificationsSheet,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
+                        onPressed: _openAiAssistant,
+                      ),
+                    ],
                   ),
-                  Text('Centria', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            actions: [
-              IconButton(
-                icon: Badge(
-                  isLabelVisible: _unreadNotifs > 0,
-                  label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
-                  child: const Icon(Icons.notifications_outlined),
                 ),
-                onPressed: _openNotificationsSheet,
               ),
-              IconButton(
-                icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
-                onPressed: _openAiAssistant,
-              ),
-            ],
-          )
-        : null,
+            )
+          : null,
       drawer: isMobile ? Drawer(child: _buildSidebar(auth, isSuper)) : null,
       body: Stack(
         children: [
@@ -294,14 +305,22 @@ class _AppShellState extends State<AppShell> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 650;
-        return Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(bottom: BorderSide(color: AppColors.line)),
-          ),
-          child: Row(
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.82),
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Breadcrumb / Current page label
@@ -393,10 +412,12 @@ class _AppShellState extends State<AppShell> {
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
-  }
+  },
+);
+}
 
   String _getPageTitle() {
     switch (_currentIndex) {
@@ -419,7 +440,15 @@ class _AppShellState extends State<AppShell> {
 
   Widget _buildSidebar(AuthState auth, bool isSuper) {
     return Container(
-      color: const Color(0xFFFCFDFB),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.76),
+        border: Border(
+          right: BorderSide(
+            color: Colors.black.withValues(alpha: 0.06),
+            width: 1,
+          ),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,9 +557,9 @@ class _AppShellState extends State<AppShell> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        tileColor: active ? const Color(0xFFE7F1E8) : Colors.transparent,
-        leading: Icon(icon, size: 18, color: active ? AppColors.teal : const Color(0xFF708078)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        tileColor: active ? AppColors.teal.withValues(alpha: 0.12) : Colors.transparent,
+        leading: Icon(icon, size: 19, color: active ? AppColors.teal : const Color(0xFF708078)),
         title: Text(
           label,
           style: GoogleFonts.inter(
@@ -540,7 +569,7 @@ class _AppShellState extends State<AppShell> {
           ),
         ),
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         onTap: () {
           setState(() => _currentIndex = index);
           if (MediaQuery.of(context).size.width < 860) {

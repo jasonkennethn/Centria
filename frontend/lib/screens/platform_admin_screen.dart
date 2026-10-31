@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
@@ -101,42 +102,50 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
             const SizedBox(height: 16),
 
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-                child: ListView.builder(
-                  itemCount: recentCompanies.length,
-                  itemBuilder: (context, idx) {
-                    final c = recentCompanies[idx];
-                    return Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEDF1EC)))),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(color: AppColors.soft, borderRadius: BorderRadius.circular(10)),
-                            child: Center(child: Text(c['name'][0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal))),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: AppleGlass.decoration(radius: 24),
+                    child: ListView.builder(
+                      itemCount: recentCompanies.length,
+                      itemBuilder: (context, idx) {
+                        final c = recentCompanies[idx];
+                        return Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.04))),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(c['name'] as String, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700)),
-                                Text('Slug: ${c['slug']} · Plan: ${c['plan']}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                              ],
-                            ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(color: AppColors.soft, borderRadius: BorderRadius.circular(10)),
+                                child: Center(child: Text(c['name'][0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.teal))),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(c['name'] as String, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700)),
+                                    Text('Slug: ${c['slug']} · Plan: ${c['plan']}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: AppColors.pale, borderRadius: BorderRadius.circular(6)),
+                                child: Text((c['plan'] as String).toUpperCase(), style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.teal2)),
+                              ),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(color: AppColors.pale, borderRadius: BorderRadius.circular(6)),
-                            child: Text((c['plan'] as String).toUpperCase(), style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.teal2)),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -147,22 +156,35 @@ class _PlatformAdminScreenState extends State<PlatformAdminScreen> {
   }
 
   Widget _statCard(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.line)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: AppleGlass.decoration(radius: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
-              const SizedBox(height: 8),
-              Text(value, style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                  const SizedBox(height: 8),
+                  Text(value, style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 22, color: AppColors.teal),
+              ),
             ],
           ),
-          Icon(icon, size: 24, color: AppColors.teal),
-        ],
+        ),
       ),
     );
   }

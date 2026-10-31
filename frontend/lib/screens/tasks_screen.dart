@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
@@ -273,93 +274,99 @@ class _TasksScreenState extends State<TasksScreen> {
   Widget _buildKanbanColumn(String statusKey, String label) {
     final colTasks = _tasks.where((t) => t['status'] == statusKey).toList();
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0F3EE),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E7DF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
-                child: Text('${colTasks.length}', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2F5F0).withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-
-          Expanded(
-            child: ListView.builder(
-              itemCount: colTasks.length,
-              itemBuilder: (context, idx) {
-                final task = colTasks[idx];
-                final priority = task['priority'] as String? ?? 'medium';
-                final isUrgent = priority == 'urgent' || priority == 'high';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.line),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.ink.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                    ),
+                    child: Text('${colTasks.length}', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.muted)),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              Expanded(
+                child: ListView.builder(
+                  itemCount: colTasks.length,
+                  itemBuilder: (context, idx) {
+                    final task = colTasks[idx];
+                    final priority = task['priority'] as String? ?? 'medium';
+                    final isUrgent = priority == 'urgent' || priority == 'high';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(15),
+                      decoration: AppleGlass.decoration(radius: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(task['key'] as String? ?? '', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.teal)),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isUrgent ? AppColors.amberPale : AppColors.soft,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(priority.toUpperCase(), style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: isUrgent ? AppColors.amber : AppColors.ink)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(task['key'] as String? ?? '', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.teal)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isUrgent ? AppColors.amberPale : AppColors.soft,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(priority.toUpperCase(), style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: isUrgent ? AppColors.amber : AppColors.ink)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(task['title'] as String, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, height: 1.35)),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Lead: Priya', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted)),
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_horiz, size: 16),
+                                onSelected: (newStatus) => _moveTask(task['id'], newStatus),
+                                itemBuilder: (context) => _columns
+                                    .where((c) => c['key'] != statusKey)
+                                    .map((c) => PopupMenuItem(value: c['key'], child: Text('Move to ${c['label']}')))
+                                    .toList(),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(task['title'] as String, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, height: 1.35)),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Lead: Priya', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted)),
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_horiz, size: 16),
-                            onSelected: (newStatus) => _moveTask(task['id'], newStatus),
-                            itemBuilder: (context) => _columns
-                                .where((c) => c['key'] != statusKey)
-                                .map((c) => PopupMenuItem(value: c['key'], child: Text('Move to ${c['label']}')))
-                                .toList(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

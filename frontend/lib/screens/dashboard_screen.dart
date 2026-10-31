@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
@@ -294,233 +295,273 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _metricCard(String label, String value, String sub, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.line),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: AppleGlass.decoration(radius: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
-              Icon(icon, size: 18, color: color),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, size: 16, color: color),
+                  ),
+                ],
+              ),
+              Text(value, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
+              Text(sub, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis),
             ],
           ),
-          Text(value, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.8)),
-          Text(sub, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildNextStepsCard(List<dynamic> nextSteps) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.line),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: AppleGlass.decoration(radius: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Your Next Steps', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
-              Text('${nextSteps.length} items', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Your Next Steps', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text('${nextSteps.length} items', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.teal)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (nextSteps.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text('No pending tasks assigned to you. All clear!', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
+                  ),
+                )
+              else
+                Column(
+                  children: nextSteps.map((task) {
+                    final isDone = task['status'] == 'done';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.04))),
+                      ),
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: () => _toggleTaskDone(task['id'], task['status']),
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: isDone ? const Color(0xFFE1F1E4) : Colors.white.withValues(alpha: 0.8),
+                                borderRadius: BorderRadius.circular(7),
+                                border: Border.all(
+                                  color: isDone ? const Color(0xFF9FC9AA) : Colors.black.withValues(alpha: 0.14),
+                                ),
+                              ),
+                              child: isDone ? const Center(child: Text('✓', style: TextStyle(color: Color(0xFF377750), fontSize: 13, fontWeight: FontWeight.bold))) : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  task['title'] as String,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: isDone ? TextDecoration.lineThrough : null,
+                                    color: isDone ? AppColors.muted : AppColors.ink,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text('${task['key']} · Priority: ${task['priority']}', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: isDone ? AppColors.greenPale : AppColors.soft,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              task['status'] as String,
+                              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: isDone ? AppColors.greenDone : AppColors.ink),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (nextSteps.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Text('No pending tasks assigned to you. All clear!', style: GoogleFonts.inter(fontSize: 13, color: AppColors.muted)),
-              ),
-            )
-          else
-            Column(
-              children: nextSteps.map((task) {
-                final isDone = task['status'] == 'done';
-                return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFEDF1EC)))),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: () => _toggleTaskDone(task['id'], task['status']),
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: isDone ? const Color(0xFFE1F1E4) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: isDone ? const Color(0xFF9FC9AA) : const Color(0xFFB6C6B8)),
-                          ),
-                          child: isDone ? const Center(child: Text('✓', style: TextStyle(color: Color(0xFF377750), fontSize: 12))) : null,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task['title'] as String,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                decoration: isDone ? TextDecoration.lineThrough : null,
-                                color: isDone ? AppColors.muted : AppColors.ink,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text('${task['key']} · Priority: ${task['priority']}', style: GoogleFonts.inter(fontSize: 10, color: AppColors.muted)),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isDone ? AppColors.greenPale : AppColors.soft,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          task['status'] as String,
-                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: isDone ? AppColors.greenDone : AppColors.ink),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildAiCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.violetPale,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE8E2F3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: AppleGlass.decoration(
+            radius: 24,
+            color: const Color(0xFFF7F4FD).withValues(alpha: 0.85),
+            borderColor: const Color(0xFFE5DCF8).withValues(alpha: 0.95),
+            glow: true,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.auto_awesome, size: 16, color: AppColors.violet),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.violet.withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.auto_awesome, size: 16, color: AppColors.violet),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('Centria Operations AI', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.violet)),
+                ],
               ),
-              const SizedBox(width: 10),
-              Text('Centria Operations AI', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.violet)),
+              const SizedBox(height: 16),
+              Text(
+                "Release 1.4 is pending sign-off from the release gatekeeper. The checklist and change requests have been verified against recent documentation.",
+                style: GoogleFonts.inter(fontSize: 12, height: 1.6, color: const Color(0xFF5F5875)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE4DFF0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.link, size: 14, color: AppColors.violet),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Evidence: Release checklist · Version 3',
+                        style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF70668F), fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => const AiAssistantSheet(contextType: 'reporting'),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.violet,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('Open AI Assistant'),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            "Release 1.4 is pending sign-off from the release gatekeeper. The checklist and change requests have been verified against recent documentation.",
-            style: GoogleFonts.inter(fontSize: 12, height: 1.6, color: const Color(0xFF5F5875)),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE4DFF0))),
-            child: Row(
-              children: [
-                const Icon(Icons.link, size: 14, color: AppColors.violet),
-                const SizedBox(width: 6),
-                Expanded(child: Text('Evidence: Release checklist · Version 3', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF70668F), fontWeight: FontWeight.w600))),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (ctx) => const AiAssistantSheet(contextType: 'reporting'),
-              ),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.violet),
-              child: const Text('Open AI Assistant'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildActivityFeed(List<dynamic> activities) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Recent Team Activity', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
-          const SizedBox(height: 16),
-          if (activities.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text('No activity logs recorded yet.', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
-            )
-          else
-            Column(
-              children: activities.map((act) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: AppleGlass.decoration(radius: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Recent Team Activity', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+              const SizedBox(height: 16),
+              if (activities.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text('No activity logs recorded yet.', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                )
+              else
+                Column(
+                  children: activities.map((act) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(color: AppColors.teal, shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(act['description'] as String, style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink)),
+                          ),
+                          Text(act['user'] as String, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(act['description'] as String, style: GoogleFonts.inter(fontSize: 12, color: AppColors.ink)),
-                      ),
-                      Text(act['user'] as String, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted)),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-        ],
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

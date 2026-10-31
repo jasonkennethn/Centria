@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -21,6 +22,117 @@ class AppColors {
   static const Color greenPale = Color(0xFFE4F2E4);
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorPale = Color(0xFFFFDAD6);
+}
+
+class AppleGlass {
+  /// Apple frosted glass container decoration with hairline border & ambient shadow
+  static BoxDecoration decoration({
+    double radius = 24,
+    Color? color,
+    Color? borderColor,
+    bool glow = false,
+  }) {
+    return BoxDecoration(
+      color: color ?? Colors.white.withValues(alpha: 0.78),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: borderColor ?? Colors.white.withValues(alpha: 0.9),
+        width: 1.2,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: glow
+              ? AppColors.teal.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.04),
+          blurRadius: 28,
+          offset: const Offset(0, 8),
+          spreadRadius: 0,
+        ),
+      ],
+    );
+  }
+
+  /// Dark / Ambient glass decoration for pills and floating controls
+  static BoxDecoration darkPill({double radius = 999}) {
+    return BoxDecoration(
+      color: const Color(0xFF162A24).withValues(alpha: 0.88),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.16),
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.18),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    );
+  }
+}
+
+class GlassBox extends StatelessWidget {
+  final Widget child;
+  final double blur;
+  final double radius;
+  final Color? color;
+  final Color? borderColor;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double? width;
+  final double? height;
+  final VoidCallback? onTap;
+
+  const GlassBox({
+    super.key,
+    required this.child,
+    this.blur = 20,
+    this.radius = 24,
+    this.color,
+    this.borderColor,
+    this.padding,
+    this.margin,
+    this.width,
+    this.height,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = child;
+    if (padding != null) {
+      content = Padding(padding: padding!, child: content);
+    }
+    final container = Container(
+      width: width,
+      height: height,
+      margin: margin,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Container(
+            decoration: AppleGlass.decoration(
+              radius: radius,
+              color: color,
+              borderColor: borderColor,
+            ),
+            child: content,
+          ),
+        ),
+      ),
+    );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: container,
+      );
+    }
+    return container;
+  }
 }
 
 class AppTheme {
@@ -92,33 +204,33 @@ class AppTheme {
         ),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.paper,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         iconTheme: IconThemeData(color: AppColors.ink),
       ),
       cardTheme: CardThemeData(
-        color: AppColors.white,
+        color: Colors.white.withValues(alpha: 0.82),
         elevation: 0,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: AppColors.line),
-          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.9)),
+          borderRadius: BorderRadius.circular(22),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        fillColor: Colors.white.withValues(alpha: 0.88),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.line),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.line),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.teal, width: 1.8),
         ),
         labelStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
@@ -128,10 +240,8 @@ class AppTheme {
           backgroundColor: AppColors.teal,
           foregroundColor: AppColors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+          shape: const StadiumBorder(),
           textStyle: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -142,11 +252,9 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink,
-          side: const BorderSide(color: AppColors.line),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
-          ),
+          side: BorderSide(color: Colors.black.withValues(alpha: 0.12)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          shape: const StadiumBorder(),
           textStyle: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w700,

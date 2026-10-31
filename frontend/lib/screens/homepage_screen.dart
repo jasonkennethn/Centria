@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
@@ -112,26 +113,29 @@ class _HomepageScreenState extends State<HomepageScreen> {
 
   // --- 2. Locked Header ---
   Widget _buildHeader(bool isMobile) {
-    return Container(
-      height: 74,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: AppColors.paper.withValues(alpha: 0.98),
-        border: Border(bottom: BorderSide(color: AppColors.line.withValues(alpha: 0.85))),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          height: 74,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.82),
+            border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06), width: 1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
               // Brand Logo + Text
               Row(
                 children: [
@@ -222,7 +226,9 @@ class _HomepageScreenState extends State<HomepageScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _navLink(String title, VoidCallback onTap) {
@@ -939,14 +945,14 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFCFDFA),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE5EAE3)),
+                              color: Colors.white.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.ink.withValues(alpha: 0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
@@ -1210,9 +1216,16 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFCFDFB),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE4EAE2)),
+                              color: Colors.white.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1489,7 +1502,18 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(color: const Color(0xFFFBFCF9), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE0E7DD))),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1620,10 +1644,19 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
-                              color: isFeatured ? const Color(0xFFF6FAF4) : const Color(0xFFFCFDFA),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: isFeatured ? const Color(0xFF6FA28C) : const Color(0xFFE1E7DF), width: isFeatured ? 1.8 : 1.0),
-                              boxShadow: isFeatured ? [BoxShadow(color: const Color(0xFF25573E).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))] : null,
+                              color: isFeatured ? const Color(0xFFF2F8F4).withValues(alpha: 0.88) : Colors.white.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: isFeatured ? AppColors.teal.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
+                                width: isFeatured ? 1.8 : 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isFeatured ? AppColors.teal.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2073,12 +2106,32 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.10),
+                    blurRadius: 36,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2194,17 +2247,15 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: '••••••••',
-                    suffixIcon: _passwordController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              size: 20,
-                              color: AppColors.muted,
-                            ),
-                            tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                          )
-                        : null,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                      tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
                   ),
                 ),
                 // Forgot password button ONLY at sign in, never at create workspace
@@ -2243,17 +2294,15 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   decoration: InputDecoration(
                     labelText: 'New Password',
                     hintText: 'At least 8 characters',
-                    suffixIcon: _newPasswordController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              _obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              size: 20,
-                              color: AppColors.muted,
-                            ),
-                            tooltip: _obscureNewPassword ? 'Show password' : 'Hide password',
-                            onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
-                          )
-                        : null,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                      tooltip: _obscureNewPassword ? 'Show password' : 'Hide password',
+                      onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -2267,17 +2316,15 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   decoration: InputDecoration(
                     labelText: 'Re-type New Password',
                     hintText: 'Confirm your new password',
-                    suffixIcon: _confirmPasswordController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              size: 20,
-                              color: AppColors.muted,
-                            ),
-                            tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
-                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                          )
-                        : null,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                      tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
+                      onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -2319,6 +2366,8 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

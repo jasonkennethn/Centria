@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
@@ -214,81 +215,78 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
                               alignment: Alignment.centerLeft,
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(maxWidth: 840),
-                                child: Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 14),
-                                  padding: const EdgeInsets.all(22),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.line),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.ink.withValues(alpha: 0.02),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: isApproved ? AppColors.greenPale : (isPending ? AppColors.amberPale : AppColors.errorPale),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          (app['status'] as String).toUpperCase(),
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w800,
-                                            color: isApproved ? AppColors.greenDone : (isPending ? AppColors.amber : AppColors.error),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Category: ${(app['category'] as String).toUpperCase()}',
-                                        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(app['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
-                                  const SizedBox(height: 6),
-                                  Text(app['description'] as String, style: GoogleFonts.inter(fontSize: 13, height: 1.5, color: const Color(0xFF5D6E63))),
-                                  const SizedBox(height: 16),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(22),
+                                        decoration: AppleGlass.decoration(radius: 22),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    color: isApproved ? AppColors.greenPale : (isPending ? AppColors.amberPale : AppColors.errorPale),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    (app['status'] as String).toUpperCase(),
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: 9,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: isApproved ? AppColors.greenDone : (isPending ? AppColors.amber : AppColors.error),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Category: ${(app['category'] as String).toUpperCase()}',
+                                                  style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.muted),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(app['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+                                            const SizedBox(height: 6),
+                                            Text(app['description'] as String, style: GoogleFonts.inter(fontSize: 13, height: 1.5, color: const Color(0xFF5D6E63))),
+                                            const SizedBox(height: 16),
 
-                                  if (isPending)
-                                    Row(
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () => _handleDecision(app['id'], true),
-                                          child: const Text('Approve'),
+                                            if (isPending)
+                                              Row(
+                                                children: [
+                                                  ElevatedButton(
+                                                    onPressed: () => _handleDecision(app['id'], true),
+                                                    child: const Text('Approve'),
+                                                  ),
+                                                  const SizedBox(width: 10),
+                                                  OutlinedButton(
+                                                    onPressed: () => _handleDecision(app['id'], false),
+                                                    style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+                                                    child: const Text('Reject'),
+                                                  ),
+                                                ],
+                                              )
+                                            else if (app['decision_note'] != null && (app['decision_note'] as String).isNotEmpty)
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(color: AppColors.soft, borderRadius: BorderRadius.circular(8)),
+                                                child: Text('Decision Note: ${app['decision_note']}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.ink)),
+                                              ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 10),
-                                        OutlinedButton(
-                                          onPressed: () => _handleDecision(app['id'], false),
-                                          style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
-                                          child: const Text('Reject'),
-                                        ),
-                                      ],
-                                    )
-                                  else if (app['decision_note'] != null && (app['decision_note'] as String).isNotEmpty)
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(color: AppColors.soft, borderRadius: BorderRadius.circular(8)),
-                                      child: Text('Decision Note: ${app['decision_note']}', style: GoogleFonts.inter(fontSize: 11, color: AppColors.ink)),
+                                      ),
                                     ),
-                                ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
+                            );
                       },
                         ),
             ),

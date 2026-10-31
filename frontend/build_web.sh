@@ -22,7 +22,7 @@ fi
 
 echo "Using Flutter: $(which flutter)"
 flutter --version
-flutter build web --wasm
+flutter build web --wasm --no-tree-shake-icons
 
 # Ensure mobile release assets are present in web output root & assets
 if [ -d "assets" ]; then
