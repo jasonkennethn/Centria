@@ -177,17 +177,46 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   ],
                 ),
 
-              // Single Action Button
-              ElevatedButton(
-                onPressed: () => _openAuthModal(isSignUp: true),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Get Started'),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.arrow_forward, size: 14),
+              // Header Action Buttons (Get Started + Mobile Menu)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: () => _openAuthModal(isSignUp: true),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Get Started'),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.arrow_forward, size: 14),
+                      ],
+                    ),
+                  ),
+                  if (isMobile) ...[
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.menu, color: AppColors.ink),
+                      tooltip: 'Menu',
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      onSelected: (val) {
+                        switch (val) {
+                          case 'product': _scrollToSection(_productKey); break;
+                          case 'solutions': _scrollToSection(_solutionsKey); break;
+                          case 'integrations': _scrollToSection(_integrationsKey); break;
+                          case 'plans': _scrollToSection(_plansKey); break;
+                          case 'resources': _scrollToSection(_resourcesKey); break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: 'product', child: Text('Product')),
+                        const PopupMenuItem(value: 'solutions', child: Text('Solutions')),
+                        const PopupMenuItem(value: 'integrations', child: Text('Integrations')),
+                        const PopupMenuItem(value: 'plans', child: Text('Plans')),
+                        const PopupMenuItem(value: 'resources', child: Text('Resources')),
+                      ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ],
           ),
@@ -1803,9 +1832,50 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 children: [
                   Text('© 2026 Centria Platform. All rights reserved.', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                   Wrap(
-                    spacing: 16,
+                    spacing: 12,
                     runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
+                      InkWell(
+                        onTap: () => triggerAppDownload(DetectedMobileOS.android),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.soft,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.line),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.android, size: 14, color: AppColors.teal),
+                              const SizedBox(width: 4),
+                              Text('Android APK', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => triggerAppDownload(DetectedMobileOS.ios),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.soft,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.line),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.apple, size: 14, color: AppColors.teal),
+                              const SizedBox(width: 4),
+                              Text('iOS App', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ink)),
+                            ],
+                          ),
+                        ),
+                      ),
                       Text('Privacy Policy', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                       Text('Terms of Service', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
                     ],

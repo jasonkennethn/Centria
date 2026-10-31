@@ -6,7 +6,7 @@ import 'package:centria/theme/app_theme.dart';
 
 enum DetectedMobileOS { android, ios, none }
 
-DetectedMobileOS getDetectedMobileOS() {
+DetectedMobileOS getDetectedMobileOS([BuildContext? context]) {
   if (kIsWeb) {
     try {
       final userAgent = web.window.navigator.userAgent.toLowerCase();
@@ -27,6 +27,15 @@ DetectedMobileOS getDetectedMobileOS() {
   if (defaultTargetPlatform == TargetPlatform.iOS) {
     return DetectedMobileOS.ios;
   }
+
+  // If in browser on mobile device or responsive mobile viewport (< 860px)
+  if (context != null) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 860) {
+      return DetectedMobileOS.android;
+    }
+  }
+
   return DetectedMobileOS.none;
 }
 
@@ -64,7 +73,7 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final os = getDetectedMobileOS();
+    final os = getDetectedMobileOS(context);
 
     // STRICT: Only show on Android or iOS
     if (os == DetectedMobileOS.none || _dismissed) {
