@@ -11,28 +11,26 @@ void main() async {
   // Use path URL strategy for clean URLs (e.g. site.com/dashboard instead of site.com/#/dashboard)
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenSplash = prefs.getBool('centria_has_seen_splash') ?? false;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    // Clear legacy persistent key so splash screen displays on each fresh browser launch
+    await prefs.remove('centria_has_seen_splash');
+  } catch (_) {}
   await AuthState().init();
 
-  runApp(CentriaApp(hasSeenSplash: hasSeenSplash));
+  runApp(const CentriaApp());
 }
 
 class CentriaApp extends StatelessWidget {
-  final bool hasSeenSplash;
-  const CentriaApp({super.key, this.hasSeenSplash = false});
+  const CentriaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final String startRoute = !hasSeenSplash
-        ? '/splash'
-        : (AuthState().isAuthenticated ? '/dashboard' : '/');
-
     return MaterialApp(
       title: 'Centria — AI-Powered Company Operating System',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: startRoute,
+      initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/': (context) => const HomepageScreen(),
