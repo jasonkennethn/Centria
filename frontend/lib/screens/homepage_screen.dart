@@ -133,97 +133,102 @@ class _HomepageScreenState extends State<HomepageScreen> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1200),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-              // Brand Logo + Text
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.teal,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(color: AppColors.teal.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
+              child: isMobile
+                  ? Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 38,
+                              height: 38,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: AppColors.teal,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(color: AppColors.teal.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                                  ],
+                                ),
+                                child: const Center(
+                                  child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 22, fontWeight: FontWeight.w900)),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'Centria',
+                            style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -1.2, color: AppColors.ink),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Brand Logo + Text
+                        Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.teal,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(color: AppColors.teal.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 24, fontWeight: FontWeight.w900)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'Centria',
+                              style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -1.2, color: AppColors.ink),
+                            ),
                           ],
                         ),
-                        child: const Center(
-                          child: Text('c', style: TextStyle(color: AppColors.lime, fontSize: 24, fontWeight: FontWeight.w900)),
+
+                        // Navigation Links (Desktop)
+                        Row(
+                          children: [
+                            _navLink('Product', () => _scrollToSection(_productKey)),
+                            _navLink('Solutions', () => _scrollToSection(_solutionsKey)),
+                            _navLink('Integrations', () => _scrollToSection(_integrationsKey)),
+                            _navLink('Plans', () => _scrollToSection(_plansKey)),
+                            _navLink('Resources', () => _scrollToSection(_resourcesKey)),
+                          ],
                         ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Centria',
-                    style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -1.2, color: AppColors.ink),
-                  ),
-                ],
-              ),
 
-              // Navigation Links (Desktop)
-              if (!isMobile)
-                Row(
-                  children: [
-                    _navLink('Product', () => _scrollToSection(_productKey)),
-                    _navLink('Solutions', () => _scrollToSection(_solutionsKey)),
-                    _navLink('Integrations', () => _scrollToSection(_integrationsKey)),
-                    _navLink('Plans', () => _scrollToSection(_plansKey)),
-                    _navLink('Resources', () => _scrollToSection(_resourcesKey)),
-                  ],
-                ),
-
-              // Header Action Buttons (Get Started + Mobile Menu)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _openAuthModal(isSignUp: true),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Get Started'),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.arrow_forward, size: 14),
+                        // Header Action Button (Desktop)
+                        ElevatedButton(
+                          onPressed: () => _openAuthModal(isSignUp: true),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('Get Started'),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.arrow_forward, size: 14),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  if (isMobile) ...[
-                    const SizedBox(width: 8),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.menu, color: AppColors.ink),
-                      tooltip: 'Menu',
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      onSelected: (val) {
-                        switch (val) {
-                          case 'product': _scrollToSection(_productKey); break;
-                          case 'solutions': _scrollToSection(_solutionsKey); break;
-                          case 'integrations': _scrollToSection(_integrationsKey); break;
-                          case 'plans': _scrollToSection(_plansKey); break;
-                          case 'resources': _scrollToSection(_resourcesKey); break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(value: 'product', child: Text('Product')),
-                        const PopupMenuItem(value: 'solutions', child: Text('Solutions')),
-                        const PopupMenuItem(value: 'integrations', child: Text('Integrations')),
-                        const PopupMenuItem(value: 'plans', child: Text('Plans')),
-                        const PopupMenuItem(value: 'resources', child: Text('Resources')),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     ),

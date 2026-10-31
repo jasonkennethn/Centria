@@ -73,14 +73,12 @@ class ApiService {
       }
     } catch (_) {}
 
-    // Migration fallback from SharedPreferences if previously stored
     try {
       final prefs = await SharedPreferences.getInstance();
-      final legacy = prefs.getString('access_token');
-      if (legacy != null && legacy.isNotEmpty) {
-        _cachedAccessToken = legacy;
-        await _secureStorage.write(key: 'access_token', value: legacy);
-        await prefs.remove('access_token');
+      final saved = prefs.getString('access_token');
+      if (saved != null && saved.isNotEmpty) {
+        _cachedAccessToken = saved;
+        return _cachedAccessToken;
       }
     } catch (_) {}
 
@@ -98,11 +96,10 @@ class ApiService {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final legacy = prefs.getString('refresh_token');
-      if (legacy != null && legacy.isNotEmpty) {
-        _cachedRefreshToken = legacy;
-        await _secureStorage.write(key: 'refresh_token', value: legacy);
-        await prefs.remove('refresh_token');
+      final saved = prefs.getString('refresh_token');
+      if (saved != null && saved.isNotEmpty) {
+        _cachedRefreshToken = saved;
+        return _cachedRefreshToken;
       }
     } catch (_) {}
 
@@ -117,11 +114,10 @@ class ApiService {
       await _secureStorage.write(key: 'refresh_token', value: refresh);
     } catch (_) {}
 
-    // Ensure sensitive tokens are completely removed from unencrypted SharedPreferences
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('access_token');
-      await prefs.remove('refresh_token');
+      await prefs.setString('access_token', access);
+      await prefs.setString('refresh_token', refresh);
     } catch (_) {}
   }
 

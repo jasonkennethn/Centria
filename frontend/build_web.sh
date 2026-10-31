@@ -31,4 +31,23 @@ if [ -d "assets" ]; then
     cp -u assets/centria_v* build/web/assets/ 2>/dev/null || true
 fi
 
+# Generate static route directory fallbacks and 404.html so direct URL refresh works on any host
+for route in dashboard projects tasks knowledge approvals admin splash; do
+    mkdir -p "build/web/$route"
+    cp -f build/web/index.html "build/web/$route/index.html" 2>/dev/null || true
+done
+cp -f build/web/index.html build/web/404.html 2>/dev/null || true
+
+# Verify full MaterialIcons font is preserved
+if [ -f "build/web/assets/fonts/MaterialIcons-Regular.otf" ]; then
+    font_size=$(wc -c < "build/web/assets/fonts/MaterialIcons-Regular.otf")
+    if [ "$font_size" -lt 500000 ]; then
+        echo "Restoring full MaterialIcons font from Flutter artifacts..."
+        sdk_font=$(find "$PWD/flutter" "$HOME/flutter" -name "MaterialIcons-Regular.otf" -size +1M 2>/dev/null | head -n 1 || true)
+        if [ -n "$sdk_font" ]; then
+            cp -f "$sdk_font" "build/web/assets/fonts/MaterialIcons-Regular.otf"
+        fi
+    fi
+fi
+
 echo "✓ Production WebAssembly (Wasm + Skwasm) build complete: build/web/"

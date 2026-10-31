@@ -223,6 +223,7 @@ class _AppShellState extends State<AppShell> {
                   child: AppBar(
                     backgroundColor: Colors.white.withValues(alpha: 0.82),
                     elevation: 0,
+                    centerTitle: true,
                     title: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

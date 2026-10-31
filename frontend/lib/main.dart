@@ -31,15 +31,57 @@ class CentriaApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: '/splash',
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/': (context) => const HomepageScreen(),
-        '/dashboard': (context) => const AppShell(initialIndex: 0),
-        '/projects': (context) => const AppShell(initialIndex: 1),
-        '/tasks': (context) => const AppShell(initialIndex: 2),
-        '/knowledge': (context) => const AppShell(initialIndex: 3),
-        '/approvals': (context) => const AppShell(initialIndex: 4),
-        '/admin': (context) => const AppShell(initialIndex: 5),
+      onGenerateRoute: (settings) {
+        final raw = settings.name ?? '/';
+        final uri = Uri.parse(raw);
+        var path = uri.path.trim();
+        if (path.endsWith('/') && path.length > 1) {
+          path = path.substring(0, path.length - 1);
+        }
+
+        switch (path) {
+          case '/dashboard':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 0),
+            );
+          case '/projects':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 1),
+            );
+          case '/tasks':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 2),
+            );
+          case '/knowledge':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 3),
+            );
+          case '/approvals':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 4),
+            );
+          case '/admin':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const AppShell(initialIndex: 5),
+            );
+          case '/splash':
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const SplashScreen(),
+            );
+          case '/':
+          default:
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => const HomepageScreen(),
+            );
+        }
       },
     );
   }

@@ -53,7 +53,12 @@ class _SplashScreenState extends State<SplashScreen> {
     _dotTimer?.cancel();
 
     // Determine target route
-    String target = Uri.base.path;
+    String rawPath = Uri.base.path.trim();
+    if (rawPath.endsWith('/') && rawPath.length > 1) {
+      rawPath = rawPath.substring(0, rawPath.length - 1);
+    }
+
+    String target = rawPath;
     if (target.isEmpty || target == '/splash') {
       target = AuthState().isAuthenticated ? '/dashboard' : '/';
     } else if (!AuthState().isAuthenticated && target != '/') {
