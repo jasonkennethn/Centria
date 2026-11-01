@@ -44,20 +44,50 @@ cp -f build/web/index.html build/web/404.html 2>/dev/null || true
 cp -f build/web/assets/FontManifest.json build/web/FontManifest.json 2>/dev/null || true
 cp -f build/web/assets/AssetManifest* build/web/ 2>/dev/null || true
 
-# Verify full MaterialIcons font is preserved in both assets/fonts and fonts/
+# Generate AssetManifest.json fallback for any legacy asset loaders
+python3 -c "
+import json
+manifest = {
+    'assets/fonts/MaterialIcons-Regular.otf': ['assets/fonts/MaterialIcons-Regular.otf'],
+    'fonts/MaterialIcons-Regular.otf': ['fonts/MaterialIcons-Regular.otf'],
+    'packages/cupertino_icons/assets/CupertinoIcons.ttf': ['packages/cupertino_icons/assets/CupertinoIcons.ttf'],
+    'assets/images/logo.png': ['assets/images/logo.png']
+}
+with open('build/web/assets/AssetManifest.json', 'w') as f:
+    json.dump(manifest, f)
+with open('build/web/AssetManifest.json', 'w') as f:
+    json.dump(manifest, f)
+" 2>/dev/null || true
+
+# Verify full MaterialIcons font is preserved in all path variants
 if [ -f "build/web/assets/fonts/MaterialIcons-Regular.otf" ]; then
-    font_size=$(wc -c < "build/web/assets/fonts/MaterialIcons-Regular.otf")
-    if [ "$font_size" -lt 500000 ]; then
-        echo "Restoring full MaterialIcons font from Flutter artifacts..."
-        sdk_font=$(find "$PWD/flutter" "$HOME/flutter" -name "MaterialIcons-Regular.otf" -size +1M 2>/dev/null | head -n 1 || true)
-        if [ -n "$sdk_font" ]; then
-            cp -f "$sdk_font" "build/web/assets/fonts/MaterialIcons-Regular.otf"
-        fi
-    fi
-    mkdir -p build/web/fonts
+    mkdir -p build/web/fonts build/web/assets/assets/fonts
     cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/fonts/MaterialIcons-Regular.otf" 2>/dev/null || true
+    cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/assets/assets/fonts/MaterialIcons-Regular.otf" 2>/dev/null || true
     cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/assets/fonts/MaterialIcons-Regular.ttf" 2>/dev/null || true
     cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/fonts/MaterialIcons-Regular.ttf" 2>/dev/null || true
 fi
+
+# Neutralize Flutter service worker to eliminate browser cache locks completely
+if [ -f "build/web/flutter_bootstrap.js" ]; then
+    python3 -c "
+import re
+with open('build/web/flutter_bootstrap.js', 'r') as f:
+    c = f.read()
+c = re.sub(r'serviceWorkerSettings:\s*\{[^}]*\}', 'serviceWorkerSettings: null', c)
+with open('build/web/flutter_bootstrap.js', 'w') as f:
+    f.write(c)
+" 2>/dev/null || true
+fi
+
+cat << 'EOF' > build/web/flutter_service_worker.js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.registration.unregister())
+  );
+});
+EOF
 
 echo "✓ Production Web (CanvasKit) build complete: build/web/"

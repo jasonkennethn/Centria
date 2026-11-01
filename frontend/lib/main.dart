@@ -7,10 +7,44 @@ import 'package:centria/screens/homepage_screen.dart';
 import 'package:centria/screens/app_shell.dart';
 import 'package:centria/services/auth_state.dart';
 
+import 'package:flutter/services.dart';
+
+Future<void> _preloadUniversalIcons() async {
+  // Preload MaterialIcons into memory so CanvasKit never encounters a missing glyph
+  try {
+    final materialLoader = FontLoader('MaterialIcons');
+    ByteData? data;
+    for (final path in [
+      'assets/fonts/MaterialIcons-Regular.otf',
+      'fonts/MaterialIcons-Regular.otf',
+      'assets/fonts/MaterialIcons-Regular.ttf',
+      'fonts/MaterialIcons-Regular.ttf',
+    ]) {
+      try {
+        data = await rootBundle.load(path);
+        if (data.lengthInBytes > 100000) break;
+      } catch (_) {}
+    }
+    if (data != null) {
+      materialLoader.addFont(Future.value(data));
+      await materialLoader.load();
+    }
+  } catch (_) {}
+
+  // Preload CupertinoIcons
+  try {
+    final cupertinoLoader = FontLoader('packages/cupertino_icons/CupertinoIcons');
+    final data = await rootBundle.load('packages/cupertino_icons/assets/CupertinoIcons.ttf');
+    cupertinoLoader.addFont(Future.value(data));
+    await cupertinoLoader.load();
+  } catch (_) {}
+}
+
 void main() async {
   // Use path URL strategy for clean URLs (e.g. site.com/dashboard instead of site.com/#/dashboard)
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  await _preloadUniversalIcons();
   try {
     final prefs = await SharedPreferences.getInstance();
     // Clear legacy persistent key so splash screen displays on each fresh browser launch

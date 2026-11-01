@@ -161,11 +161,18 @@
   </noscript>
 
   <script>
-    // Automated client cache-buster: Purge stale font/asset cache and old service workers
+    // Universal cache buster: Always unregister service workers & purge old cache
     (function() {
       try {
-        var version = 'centria_v4_canvas';
-        if (localStorage.getItem('centria_cache_version') !== version) {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            for (var i = 0; i < regs.length; i++) {
+              regs[i].unregister();
+            }
+          });
+        }
+        var version = 'centria_v6_fresh';
+        if (localStorage.getItem('centria_cache_v') !== version) {
           if ('caches' in window) {
             caches.keys().then(function(names) {
               for (var i = 0; i < names.length; i++) {
@@ -173,14 +180,7 @@
               }
             });
           }
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-              for (var i = 0; i < registrations.length; i++) {
-                registrations[i].unregister();
-              }
-            });
-          }
-          localStorage.setItem('centria_cache_version', version);
+          localStorage.setItem('centria_cache_v', version);
         }
       } catch (e) {}
     })();
