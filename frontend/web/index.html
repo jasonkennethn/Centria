@@ -50,8 +50,8 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
   <link rel="manifest" href="site.webmanifest">
   <link rel="preload" href="assets/assets/images/logo.png" as="image" type="image/png">
-  <!-- Universal Material Icons: preload both local and CDN fallback; swap to swap ensures glyphs never blank -->
-  <link rel="preload" href="assets/fonts/MaterialIcons-Regular.otf" as="font" type="font/otf" crossorigin="anonymous">
+  <!-- Universal Material Icons: preload both local and CDN fallback; swap ensures glyphs never blank -->
+  <link rel="preload" href="assets/fonts/MaterialIcons-Regular.otf?v=3" as="font" type="font/otf" crossorigin="anonymous">
   <link rel="preload" href="https://fonts.gstatic.com/s/materialicons/v142/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,7 +68,9 @@
       font-family: 'MaterialIcons';
       font-style: normal;
       font-weight: 400;
-      src: url('assets/fonts/MaterialIcons-Regular.otf') format('opentype'),
+      src: url('assets/fonts/MaterialIcons-Regular.otf?v=3') format('opentype'),
+           url('assets/fonts/MaterialIcons-Regular.ttf?v=3') format('truetype'),
+           url('fonts/MaterialIcons-Regular.otf?v=3') format('opentype'),
            url('https://fonts.gstatic.com/s/materialicons/v142/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2') format('woff2');
       font-display: swap;
     }
@@ -156,8 +158,31 @@
       </ul>
       <p>Centria connects projects, knowledge, approvals, and engineering workflows in one workspace.</p>
     </div>
-  </noscript>
-
+  <script>
+    // Automated client cache-buster: Purge stale font/asset cache and old service workers
+    (function() {
+      try {
+        var version = 'centria_v3_icons';
+        if (localStorage.getItem('centria_cache_version') !== version) {
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              for (var i = 0; i < names.length; i++) {
+                caches.delete(names[i]);
+              }
+            });
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for (var i = 0; i < registrations.length; i++) {
+                registrations[i].unregister();
+              }
+            });
+          }
+          localStorage.setItem('centria_cache_version', version);
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 

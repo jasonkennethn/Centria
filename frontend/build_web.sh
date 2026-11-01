@@ -22,7 +22,9 @@ fi
 
 echo "Using Flutter: $(which flutter)"
 flutter --version
-flutter build web --wasm --no-tree-shake-icons
+
+# Build with production CanvasKit & retain full MaterialIcons font table
+flutter build web --no-tree-shake-icons
 
 # Ensure mobile release assets are present in web output root & assets
 if [ -d "assets" ]; then
@@ -38,7 +40,11 @@ for route in dashboard projects tasks knowledge approvals admin splash; do
 done
 cp -f build/web/index.html build/web/404.html 2>/dev/null || true
 
-# Verify full MaterialIcons font is preserved
+# Mirror FontManifest and AssetManifest to web root to ensure zero 404s
+cp -f build/web/assets/FontManifest.json build/web/FontManifest.json 2>/dev/null || true
+cp -f build/web/assets/AssetManifest* build/web/ 2>/dev/null || true
+
+# Verify full MaterialIcons font is preserved in both assets/fonts and fonts/
 if [ -f "build/web/assets/fonts/MaterialIcons-Regular.otf" ]; then
     font_size=$(wc -c < "build/web/assets/fonts/MaterialIcons-Regular.otf")
     if [ "$font_size" -lt 500000 ]; then
@@ -50,6 +56,8 @@ if [ -f "build/web/assets/fonts/MaterialIcons-Regular.otf" ]; then
     fi
     mkdir -p build/web/fonts
     cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/fonts/MaterialIcons-Regular.otf" 2>/dev/null || true
+    cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/assets/fonts/MaterialIcons-Regular.ttf" 2>/dev/null || true
+    cp -f "build/web/assets/fonts/MaterialIcons-Regular.otf" "build/web/fonts/MaterialIcons-Regular.ttf" 2>/dev/null || true
 fi
 
-echo "✓ Production WebAssembly (Wasm + Skwasm) build complete: build/web/"
+echo "✓ Production Web (CanvasKit) build complete: build/web/"
