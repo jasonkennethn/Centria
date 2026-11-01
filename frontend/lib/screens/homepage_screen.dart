@@ -6,6 +6,8 @@ import 'package:centria/services/auth_state.dart';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/widgets/app_download_dialog.dart';
 import 'package:centria/widgets/brand_icons.dart';
+import 'package:centria/widgets/app_icons.dart';
+import 'package:centria/widgets/hover_card.dart';
 
 class HomepageScreen extends StatefulWidget {
   const HomepageScreen({super.key});
@@ -230,7 +232,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             children: [
                               const Text('Get Started'),
                               const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward, size: 14),
+                              AppIcons.arrowForward(size: 14, color: Colors.white),
                             ],
                           ),
                         ),
@@ -313,7 +315,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(color: const Color(0xFFE5EFE4), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.circle_outlined, size: 14, color: AppColors.teal2),
+              child: Center(child: AppIcons.checkCircle(size: 14, color: AppColors.teal2)),
             ),
             const SizedBox(width: 8),
             Text(
@@ -362,7 +364,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 children: [
                   const Text('Join Now'),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 16),
+                  AppIcons.arrowForward(size: 16, color: Colors.white),
                 ],
               ),
             ),
@@ -377,7 +379,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 children: [
                   const Text('Explore the product'),
                   const SizedBox(width: 6),
-                  const Icon(Icons.chevron_right, size: 16),
+                  AppIcons.chevronRight(size: 16, color: AppColors.ink),
                 ],
               ),
             ),
@@ -410,7 +412,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.check_circle_outline, size: 15, color: AppColors.teal),
+        AppIcons.checkCircle(size: 14, color: AppColors.teal),
         const SizedBox(width: 6),
         Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF5D6E66))),
       ],
@@ -504,10 +506,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           const SizedBox(height: 14),
                           Text('WORKSPACE', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.8)),
                           const SizedBox(height: 6),
-                          _miniSideItem('My Day', Icons.calendar_today_outlined, _previewTab == 0),
-                          _miniSideItem('Projects', Icons.folder_outlined, _previewTab == 1, badge: '08'),
-                          _miniSideItem('Knowledge', Icons.book_outlined, _previewTab == 2),
-                          _miniSideItem('Approvals', Icons.check_circle_outline, _previewTab == 3, badge: '03'),
+                          _miniSideItem('My Day', _previewTab == 0),
+                          _miniSideItem('Projects', _previewTab == 1, badge: '08'),
+                          _miniSideItem('Knowledge', _previewTab == 2),
+                          _miniSideItem('Approvals', _previewTab == 3, badge: '03'),
                         ],
                       ),
                     ),
@@ -541,7 +543,25 @@ class _HomepageScreenState extends State<HomepageScreen> {
     );
   }
 
-  Widget _miniSideItem(String label, IconData icon, bool active, {String? badge}) {
+  Widget _miniSideItem(String label, bool active, {String? badge}) {
+    final color = active ? AppColors.teal : const Color(0xFF708078);
+    Widget iconWidget;
+    switch (label) {
+      case 'My Day':
+        iconWidget = AppIcons.calendar(size: 12, color: color);
+        break;
+      case 'Projects':
+        iconWidget = AppIcons.folder(size: 12, color: color);
+        break;
+      case 'Knowledge':
+        iconWidget = AppIcons.book(size: 12, color: color);
+        break;
+      case 'Approvals':
+        iconWidget = AppIcons.checkCircle(size: 12, color: color);
+        break;
+      default:
+        iconWidget = AppIcons.folder(size: 12, color: color);
+    }
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
@@ -551,7 +571,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: active ? AppColors.teal : const Color(0xFF708078)),
+          iconWidget,
           const SizedBox(width: 5),
           Expanded(
             child: Text(
@@ -627,7 +647,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),
+                      AppIcons.sparkles(size: 14, color: AppColors.violet),
                       const SizedBox(width: 6),
                       Text('Semantic Search with Citations', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.violet)),
                     ],
@@ -716,7 +736,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add, size: 10),
+                      AppIcons.add(size: 10, color: Colors.white),
                       const SizedBox(width: 4),
                       Text('Create', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold)),
                     ],
@@ -767,7 +787,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.auto_awesome, size: 11, color: AppColors.violet),
+                            AppIcons.sparkles(size: 11, color: AppColors.violet),
                             const SizedBox(width: 4),
                             Text('Centria AI', style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.violet)),
                           ],
@@ -853,7 +873,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
       decoration: BoxDecoration(border: Border.all(color: AppColors.line), borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          const Icon(Icons.description_outlined, size: 16, color: AppColors.teal),
+          AppIcons.document(size: 16, color: AppColors.teal),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -912,22 +932,41 @@ class _HomepageScreenState extends State<HomepageScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.shield_outlined, size: 14, color: AppColors.teal),
+        AppIcons.shield(size: 14, color: AppColors.teal),
         const SizedBox(width: 6),
         Text(text, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF53675C))),
       ],
     );
   }
 
+  Widget _getFeatureIcon(String title, Color color) {
+    switch (title) {
+      case 'Projects':
+        return AppIcons.folder(size: 20, color: color);
+      case 'Tasks & Issues':
+        return AppIcons.checklist(size: 20, color: color);
+      case 'Knowledge Base':
+        return AppIcons.book(size: 20, color: color);
+      case 'Approval Gates':
+        return AppIcons.shieldCheck(size: 20, color: color);
+      case 'Ground-Truth AI':
+        return AppIcons.sparkles(size: 20, color: color);
+      case 'GitHub Connected':
+        return BrandIcons.github(size: 20, color: color);
+      default:
+        return AppIcons.folder(size: 20, color: color);
+    }
+  }
+
   // --- 5. Features Section ---
   Widget _buildFeatures(bool isMobile) {
     final features = [
-      {'title': 'Projects', 'desc': 'Structured workspaces for releases, customer deliverables, and team milestones.', 'icon': Icons.folder_open_outlined, 'color': AppColors.teal},
-      {'title': 'Tasks & Issues', 'desc': 'Keep daily execution connected to broader goals with custom kanban states.', 'icon': Icons.checklist_outlined, 'color': AppColors.teal},
-      {'title': 'Knowledge Base', 'desc': 'Store SOPs, specs, and policies right where your team works.', 'icon': Icons.menu_book_outlined, 'color': AppColors.teal},
-      {'title': 'Approval Gates', 'desc': 'Clear approval workflows for releases, scope changes, and budget gates.', 'icon': Icons.verified_user_outlined, 'color': AppColors.amber},
-      {'title': 'Ground-Truth AI', 'desc': 'Get instant answers with verifiable source citations from your documents.', 'icon': Icons.auto_awesome, 'color': AppColors.violet},
-      {'title': 'GitHub Connected', 'desc': 'Link branches, pull requests, and commit milestones to tasks seamlessly.', 'icon': Icons.code_outlined, 'color': AppColors.teal},
+      {'title': 'Projects', 'desc': 'Structured workspaces for releases, customer deliverables, and team milestones.', 'color': AppColors.teal},
+      {'title': 'Tasks & Issues', 'desc': 'Keep daily execution connected to broader goals with custom kanban states.', 'color': AppColors.teal},
+      {'title': 'Knowledge Base', 'desc': 'Store SOPs, specs, and policies right where your team works.', 'color': AppColors.teal},
+      {'title': 'Approval Gates', 'desc': 'Clear approval workflows for releases, scope changes, and budget gates.', 'color': AppColors.amber},
+      {'title': 'Ground-Truth AI', 'desc': 'Get instant answers with verifiable source citations from your documents.', 'color': AppColors.violet},
+      {'title': 'GitHub Connected', 'desc': 'Link branches, pull requests, and commit milestones to tasks seamlessly.', 'color': AppColors.teal},
     ];
 
     return Container(
@@ -977,42 +1016,25 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 380),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(22),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.65),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.75), width: 1.2),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.04),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ],
+                          child: HoverCard(
+                            radius: 24,
+                            padding: const EdgeInsets.all(22),
+                            liftDistance: 6.0,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: (f['color'] as Color).withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: _getFeatureIcon(f['title'] as String, f['color'] as Color),
+                                  ),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        color: (f['color'] as Color).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Center(
-                                        child: (f['title'] == 'GitHub Connected')
-                                            ? BrandIcons.github(size: 20, color: f['color'] as Color)
-                                            : Icon(f['icon'] as IconData, size: 20, color: f['color'] as Color),
-                                      ),
-                                    ),
-                                    const Spacer(),
+                                const Spacer(),
                                 Text(f['title'] as String, style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
                                 const SizedBox(height: 6),
                                 Text(f['desc'] as String, style: GoogleFonts.inter(fontSize: 12, height: 1.45, color: const Color(0xFF5D6E63))),
@@ -1020,10 +1042,8 @@ class _HomepageScreenState extends State<HomepageScreen> {
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                },
+                      );
+                    },
                   );
                 },
               ),
@@ -1122,7 +1142,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: active ? AppColors.teal : Colors.transparent),
+                AppIcons.chevronRight(size: 18, color: active ? AppColors.teal : Colors.transparent),
               ],
             ),
           ),
@@ -1186,7 +1206,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
           const SizedBox(height: 24),
           Row(
             children: [
-              const Icon(Icons.check_circle, size: 16, color: AppColors.greenDone),
+              AppIcons.checkCircle(size: 16, color: AppColors.greenDone, filled: true),
               const SizedBox(width: 8),
               Text('Verified & active in Northstar workspace', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF50705B))),
             ],
@@ -1258,21 +1278,10 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 380),
-                          child: Container(
-                            width: double.infinity,
+                          child: HoverCard(
+                            radius: 24,
                             padding: const EdgeInsets.all(22),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.78),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
+                            liftDistance: 6.0,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1291,7 +1300,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.check, size: 14, color: AppColors.teal),
+                                          AppIcons.check(size: 14, color: AppColors.teal),
                                           const SizedBox(width: 8),
                                           Expanded(child: Text(p, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF53685D)))),
                                         ],
@@ -1354,7 +1363,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                               width: 34,
                               height: 34,
                               decoration: BoxDecoration(color: const Color(0xFFF0ECFA), borderRadius: BorderRadius.circular(10)),
-                              child: const Icon(Icons.auto_awesome, color: AppColors.violet, size: 18),
+                              child: Center(child: AppIcons.sparkles(color: AppColors.violet, size: 18)),
                             ),
                             const SizedBox(width: 10),
                             Column(
@@ -1401,7 +1410,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.description_outlined, size: 16, color: AppColors.violet),
+                          AppIcons.document(size: 16, color: AppColors.violet),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -1528,7 +1537,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
     } else if (name.contains('Brevo')) {
       return BrandIcons.brevo(size: 20);
     }
-    return const Icon(Icons.extension_outlined, size: 20, color: AppColors.teal);
+    return AppIcons.extension(size: 20, color: AppColors.teal);
   }
 
   // --- 10. Security & Privacy Section ---
@@ -1571,25 +1580,14 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 340),
-                          child: Container(
-                            width: double.infinity,
+                          child: HoverCard(
+                            radius: 20,
                             padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.78),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
+                            liftDistance: 5.0,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.lock_outline, size: 20, color: AppColors.teal),
+                                AppIcons.lock(size: 20, color: AppColors.teal),
                                 const Spacer(),
                                 Text(s['title']!, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
                                 const SizedBox(height: 6),
@@ -1712,24 +1710,13 @@ class _HomepageScreenState extends State<HomepageScreen> {
                       return Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 340),
-                          child: Container(
-                            width: double.infinity,
+                          child: HoverCard(
+                            radius: 24,
                             padding: const EdgeInsets.all(22),
-                            decoration: BoxDecoration(
-                              color: isFeatured ? const Color(0xFFF2F8F4).withValues(alpha: 0.88) : Colors.white.withValues(alpha: 0.78),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: isFeatured ? AppColors.teal.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
-                                width: isFeatured ? 1.8 : 1.2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isFeatured ? AppColors.teal.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
-                                  blurRadius: 28,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
+                            liftDistance: 6.0,
+                            borderColor: isFeatured ? AppColors.teal.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
+                            hoverBorderColor: isFeatured ? AppColors.teal : AppColors.teal.withValues(alpha: 0.45),
+                            color: isFeatured ? const Color(0xFFF2F8F4).withValues(alpha: 0.88) : Colors.white.withValues(alpha: 0.78),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1825,7 +1812,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                                 Expanded(
                                   child: Text(faqs[index]['q']!, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
                                 ),
-                                Icon(isOpen ? Icons.remove : Icons.add, color: AppColors.teal, size: 20),
+                                isOpen ? AppIcons.remove(size: 20, color: AppColors.teal) : AppIcons.add(size: 20, color: AppColors.teal),
                               ],
                             ),
                           ),
@@ -1954,7 +1941,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.android, size: 14, color: AppColors.teal),
+                              AppIcons.android(size: 14, color: AppColors.teal),
                               const SizedBox(width: 4),
                               Text('Android APK', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ink)),
                             ],
@@ -1974,7 +1961,7 @@ class _HomepageScreenState extends State<HomepageScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.apple, size: 14, color: AppColors.teal),
+                              AppIcons.apple(size: 14, color: AppColors.teal),
                               const SizedBox(width: 4),
                               Text('iOS App', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ink)),
                             ],
@@ -2245,7 +2232,7 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: AppIcons.close(size: 20, color: AppColors.ink),
                   ),
                 ],
               ),
@@ -2331,11 +2318,9 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                     labelText: 'Password',
                     hintText: '••••••••',
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        size: 20,
-                        color: AppColors.muted,
-                      ),
+                      icon: _obscurePassword
+                          ? AppIcons.visibilityOff(size: 20, color: AppColors.muted)
+                          : AppIcons.visibility(size: 20, color: AppColors.muted),
                       tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                       onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
@@ -2378,11 +2363,9 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                     labelText: 'New Password',
                     hintText: 'At least 8 characters',
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        size: 20,
-                        color: AppColors.muted,
-                      ),
+                      icon: _obscureNewPassword
+                          ? AppIcons.visibilityOff(size: 20, color: AppColors.muted)
+                          : AppIcons.visibility(size: 20, color: AppColors.muted),
                       tooltip: _obscureNewPassword ? 'Show password' : 'Hide password',
                       onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
                     ),
@@ -2400,11 +2383,9 @@ class _AuthModalDialogState extends State<_AuthModalDialog> {
                     labelText: 'Re-type New Password',
                     hintText: 'Confirm your new password',
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        size: 20,
-                        color: AppColors.muted,
-                      ),
+                      icon: _obscureConfirmPassword
+                          ? AppIcons.visibilityOff(size: 20, color: AppColors.muted)
+                          : AppIcons.visibility(size: 20, color: AppColors.muted),
                       tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
                       onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                     ),

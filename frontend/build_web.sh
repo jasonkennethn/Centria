@@ -44,15 +44,26 @@ cp -f build/web/index.html build/web/404.html 2>/dev/null || true
 cp -f build/web/assets/FontManifest.json build/web/FontManifest.json 2>/dev/null || true
 cp -f build/web/assets/AssetManifest* build/web/ 2>/dev/null || true
 
-# Generate AssetManifest.json fallback for any legacy asset loaders
+# Safely merge AssetManifest fallbacks for any legacy asset loaders
 python3 -c "
-import json
-manifest = {
+import json, os
+manifest_path = 'build/web/assets/AssetManifest.json'
+manifest = {}
+if os.path.exists(manifest_path):
+    try:
+        with open(manifest_path, 'r') as f:
+            manifest = json.load(f)
+    except Exception:
+        pass
+fallbacks = {
     'assets/fonts/MaterialIcons-Regular.otf': ['assets/fonts/MaterialIcons-Regular.otf'],
     'fonts/MaterialIcons-Regular.otf': ['fonts/MaterialIcons-Regular.otf'],
     'packages/cupertino_icons/assets/CupertinoIcons.ttf': ['packages/cupertino_icons/assets/CupertinoIcons.ttf'],
     'assets/images/logo.png': ['assets/images/logo.png']
 }
+for k, v in fallbacks.items():
+    if k not in manifest:
+        manifest[k] = v
 with open('build/web/assets/AssetManifest.json', 'w') as f:
     json.dump(manifest, f)
 with open('build/web/AssetManifest.json', 'w') as f:

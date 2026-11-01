@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:web/web.dart' as web;
 import 'package:centria/theme/app_theme.dart';
+import 'package:centria/widgets/app_icons.dart';
 
 enum DetectedMobileOS { android, ios, none }
 
@@ -162,11 +163,9 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(
-                            child: Icon(
-                              isAndroid ? Icons.android : Icons.apple,
-                              color: Colors.white,
-                              size: 18,
-                            ),
+                            child: isAndroid
+                                ? AppIcons.android(color: Colors.white, size: 18)
+                                : AppIcons.apple(color: Colors.white, size: 18),
                           ),
                         ),
                       ),
@@ -266,7 +265,7 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.arrow_downward_rounded, size: 14),
+                                  AppIcons.arrowDown(size: 14, color: Colors.white),
                                   const SizedBox(width: 4),
                                   Text(
                                     'GET',
@@ -286,8 +285,7 @@ class _AppDownloadHoverDialogState extends State<AppDownloadHoverDialog>
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          child: const Icon(
-                            Icons.close_rounded,
+                          child: AppIcons.close(
                             size: 14,
                             color: AppColors.muted,
                           ),

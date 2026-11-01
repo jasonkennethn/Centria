@@ -4,15 +4,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:centria/theme/app_theme.dart';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/services/realtime_service.dart';
+import 'package:centria/widgets/app_icons.dart';
 
 class AiAssistantSheet extends StatefulWidget {
   final String contextType;
   final String? contextId;
+  final bool isDialog;
 
   const AiAssistantSheet({
     super.key,
     this.contextType = 'general',
     this.contextId,
+    this.isDialog = false,
   });
 
   @override
@@ -130,16 +133,20 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final borderRadius = widget.isDialog
+        ? BorderRadius.circular(28)
+        : const BorderRadius.vertical(top: Radius.circular(28));
+
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: borderRadius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
-          height: MediaQuery.of(context).size.height * 0.85,
+          height: widget.isDialog ? 640 : MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.72),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 1.5),
+            color: Colors.white.withValues(alpha: 0.85),
+            borderRadius: borderRadius,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.16),
@@ -165,7 +172,7 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(color: AppColors.violetPale, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.auto_awesome, color: AppColors.violet, size: 18),
+                  child: Center(child: AppIcons.sparkles(color: AppColors.violet, size: 18)),
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -178,7 +185,7 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: AppIcons.close(size: 18, color: AppColors.ink),
                 ),
               ],
             ),
@@ -206,7 +213,7 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(color: AppColors.violetPale, borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(Icons.auto_awesome, color: AppColors.violet, size: 14),
+                          child: Center(child: AppIcons.sparkles(color: AppColors.violet, size: 14)),
                         ),
                         const SizedBox(width: 10),
                       ],
@@ -246,7 +253,7 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.link, size: 12, color: AppColors.violet),
+                                        AppIcons.document(size: 12, color: AppColors.violet),
                                         const SizedBox(width: 4),
                                         Text(
                                           "${c['document_title'] ?? 'Document'} (${((c['similarity_score'] ?? 0) * 100).toInt()}%)",
@@ -302,7 +309,10 @@ class _AiAssistantSheetState extends State<AiAssistantSheet> {
                 IconButton.filled(
                   onPressed: _isLoading ? null : _sendPrompt,
                   style: IconButton.styleFrom(backgroundColor: AppColors.teal),
-                  icon: const Icon(Icons.arrow_upward, size: 18, color: Colors.white),
+                  icon: RotatedBox(
+                    quarterTurns: 3,
+                    child: AppIcons.arrowForward(size: 16, color: Colors.white),
+                  ),
                 ),
               ],
             ),

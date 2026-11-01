@@ -15,6 +15,7 @@ import 'dart:ui';
 import 'package:centria/services/api_service.dart';
 import 'package:centria/services/realtime_service.dart';
 import 'package:centria/widgets/app_download_dialog.dart';
+import 'package:centria/widgets/app_icons.dart';
 
 class AppShell extends StatefulWidget {
   final int initialIndex;
@@ -68,7 +69,7 @@ class _AppShellState extends State<AppShell> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             content: Row(
               children: [
-                const Icon(Icons.notifications_active, color: AppColors.lime, size: 20),
+                AppIcons.bell(color: AppColors.lime, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -92,87 +93,143 @@ class _AppShellState extends State<AppShell> {
 
   void _openNotificationsSheet() {
     setState(() => _unreadNotifs = 0);
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      backgroundColor: Colors.white,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+    final width = MediaQuery.of(context).size.width;
+    final isDesktop = width >= 860;
+
+    Widget buildSheetContent(BuildContext ctx, StateSetter setSheetState) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        constraints: BoxConstraints(maxHeight: isDesktop ? 520 : MediaQuery.of(context).size.height * 0.7),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    AppIcons.bell(color: AppColors.ink, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Live Notifications', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_liveNotifications.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _liveNotifications.clear());
+                          setSheetState(() {});
+                        },
+                        child: Text('Clear All', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                      ),
+                    if (isDesktop)
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: AppIcons.close(size: 18, color: AppColors.ink),
+                        tooltip: 'Close',
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const Divider(height: 20, color: AppColors.line),
+            if (_liveNotifications.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Column(
                     children: [
-                      const Icon(Icons.notifications_active_outlined, color: AppColors.ink, size: 22),
-                      const SizedBox(width: 10),
-                      Text('Live Notifications', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.ink)),
+                      AppIcons.bell(size: 36, color: AppColors.muted),
+                      const SizedBox(height: 12),
+                      Text('No new notifications', style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)),
                     ],
                   ),
-                  if (_liveNotifications.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _liveNotifications.clear());
-                        setSheetState(() {});
-                      },
-                      child: Text('Clear All', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600)),
-                    ),
-                ],
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _liveNotifications.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.line),
+                  itemBuilder: (ctx, i) {
+                    final n = _liveNotifications[i];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                      leading: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: n['type'] == 'task' ? const Color(0xFFE8F5E9) : const Color(0xFFEDE7F6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: n['type'] == 'task'
+                              ? AppIcons.checkCircle(size: 18, color: AppColors.teal, filled: true)
+                              : AppIcons.bolt(size: 18, color: AppColors.violet),
+                        ),
+                      ),
+                      title: Text(n['title'] ?? '', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
+                      subtitle: Text(n['message'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
+                      trailing: Text(n['time'] ?? '', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+                    );
+                  },
+                ),
               ),
-              const Divider(height: 24, color: AppColors.line),
-              if (_liveNotifications.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        const Icon(Icons.notifications_none, size: 40, color: AppColors.muted),
-                        const SizedBox(height: 12),
-                        Text('No new notifications', style: GoogleFonts.inter(fontSize: 14, color: AppColors.muted)),
+          ],
+        ),
+      );
+    }
+
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.35),
+        builder: (dialogCtx) => StatefulBuilder(
+          builder: (dialogCtx, setSheetState) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.90),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.9), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 36,
+                          offset: const Offset(0, 12),
+                        ),
                       ],
                     ),
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: _liveNotifications.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.line),
-                    itemBuilder: (ctx, i) {
-                      final n = _liveNotifications[i];
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                        leading: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: n['type'] == 'task' ? const Color(0xFFE8F5E9) : const Color(0xFFEDE7F6),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            n['type'] == 'task' ? Icons.task_alt : Icons.bolt,
-                            color: n['type'] == 'task' ? AppColors.teal : AppColors.violet,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(n['title'] ?? '', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink)),
-                        subtitle: Text(n['message'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted)),
-                        trailing: Text(n['time'] ?? '', style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
-                      );
-                    },
+                    child: buildSheetContent(dialogCtx, setSheetState),
                   ),
                 ),
-            ],
+              ),
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        backgroundColor: Colors.white,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setSheetState) => buildSheetContent(ctx, setSheetState),
+        ),
+      );
+    }
   }
 
   @override
@@ -188,12 +245,31 @@ class _AppShellState extends State<AppShell> {
     if (_currentIndex == 2) ctx = 'task';
     if (_currentIndex == 3) ctx = 'document';
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx2) => AiAssistantSheet(contextType: ctx),
-    );
+    final width = MediaQuery.of(context).size.width;
+    final isDesktop = width >= 860;
+
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.35),
+        builder: (dialogCtx) => Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620, maxHeight: 680),
+            child: AiAssistantSheet(contextType: ctx, isDialog: true),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx2) => AiAssistantSheet(contextType: ctx),
+      );
+    }
   }
 
   @override
@@ -250,12 +326,12 @@ class _AppShellState extends State<AppShell> {
                         icon: Badge(
                           isLabelVisible: _unreadNotifs > 0,
                           label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
-                          child: const Icon(Icons.notifications_outlined),
+                          child: AppIcons.bell(color: AppColors.ink, size: 20),
                         ),
                         onPressed: _openNotificationsSheet,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.auto_awesome, color: AppColors.violet),
+                        icon: AppIcons.sparkles(color: AppColors.violet, size: 20),
                         onPressed: _openAiAssistant,
                       ),
                     ],
@@ -296,7 +372,7 @@ class _AppShellState extends State<AppShell> {
         onPressed: _openAiAssistant,
         backgroundColor: AppColors.violet,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.auto_awesome, size: 18),
+        icon: AppIcons.sparkles(size: 18, color: Colors.white),
         label: Text('Ask AI', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
       ),
     );
@@ -370,7 +446,7 @@ class _AppShellState extends State<AppShell> {
                               Text(
                                 'Neon DB Live',
                                 style: GoogleFonts.inter(
-                                  fontSize: 11,
+                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: const Color(0xFF2E7D32),
                                 ),
@@ -385,12 +461,12 @@ class _AppShellState extends State<AppShell> {
                   compact
                       ? IconButton(
                           onPressed: _openAiAssistant,
-                          icon: const Icon(Icons.auto_awesome, size: 18, color: AppColors.violet),
+                          icon: AppIcons.sparkles(size: 18, color: AppColors.violet),
                           tooltip: 'Centria Assistant',
                         )
                       : OutlinedButton.icon(
                           onPressed: _openAiAssistant,
-                          icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.violet),
+                          icon: AppIcons.sparkles(size: 14, color: AppColors.violet),
                           label: Text('Centria Assistant', style: GoogleFonts.inter(color: AppColors.violet, fontWeight: FontWeight.w700)),
                         ),
                   const SizedBox(width: 6),
@@ -398,7 +474,7 @@ class _AppShellState extends State<AppShell> {
                     icon: Badge(
                       isLabelVisible: _unreadNotifs > 0,
                       label: Text('$_unreadNotifs', style: const TextStyle(fontSize: 10)),
-                      child: const Icon(Icons.notifications_none_outlined, color: AppColors.ink, size: 22),
+                      child: AppIcons.bell(color: AppColors.ink, size: 20),
                     ),
                     tooltip: 'Notifications',
                     onPressed: _openNotificationsSheet,
@@ -515,17 +591,17 @@ class _AppShellState extends State<AppShell> {
           Text('WORKSPACE', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.muted, letterSpacing: 0.8)),
           const SizedBox(height: 4),
 
-          _navItem(0, 'My Day', Icons.calendar_today_outlined),
-          _navItem(1, 'Projects', Icons.folder_outlined),
-          _navItem(2, 'Issues & Tasks', Icons.check_box_outlined),
-          _navItem(3, 'Knowledge', Icons.menu_book_outlined),
-          _navItem(4, 'Approvals', Icons.verified_user_outlined),
+          _navItem(0, 'My Day', iconWidget: AppIcons.calendar(size: 19, color: _currentIndex == 0 ? AppColors.teal : const Color(0xFF708078))),
+          _navItem(1, 'Projects', iconWidget: AppIcons.folder(size: 19, color: _currentIndex == 1 ? AppColors.teal : const Color(0xFF708078))),
+          _navItem(2, 'Issues & Tasks', iconWidget: AppIcons.checklist(size: 19, color: _currentIndex == 2 ? AppColors.teal : const Color(0xFF708078))),
+          _navItem(3, 'Knowledge', iconWidget: AppIcons.book(size: 19, color: _currentIndex == 3 ? AppColors.teal : const Color(0xFF708078))),
+          _navItem(4, 'Approvals', iconWidget: AppIcons.shieldCheck(size: 19, color: _currentIndex == 4 ? AppColors.amber : const Color(0xFF708078))),
 
           if (isSuper) ...[
             const SizedBox(height: 10),
             Text('PLATFORM', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.teal, letterSpacing: 0.8)),
             const SizedBox(height: 4),
-            _navItem(5, 'Platform Admin', Icons.admin_panel_settings_outlined),
+            _navItem(5, 'Platform Admin', iconWidget: AppIcons.shieldCheck(size: 19, color: _currentIndex == 5 ? AppColors.teal : const Color(0xFF708078))),
           ],
 
           const Spacer(),
@@ -546,7 +622,8 @@ class _AppShellState extends State<AppShell> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.logout, size: 18, color: AppColors.muted),
+                  icon: AppIcons.close(size: 18, color: AppColors.muted),
+                  tooltip: 'Logout',
                   onPressed: () async {
                     await auth.logout();
                     if (mounted) Navigator.pushReplacementNamed(context, '/');
@@ -560,14 +637,15 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Widget _navItem(int index, String label, IconData icon) {
+  Widget _navItem(int index, String label, {Widget? iconWidget, IconData? icon}) {
     final active = _currentIndex == index;
+    final color = active ? AppColors.teal : const Color(0xFF708078);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         tileColor: active ? AppColors.teal.withValues(alpha: 0.12) : Colors.transparent,
-        leading: Icon(icon, size: 19, color: active ? AppColors.teal : const Color(0xFF708078)),
+        leading: iconWidget ?? Icon(icon, size: 19, color: color),
         title: Text(
           label,
           style: GoogleFonts.inter(
